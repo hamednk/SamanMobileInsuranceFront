@@ -1,0 +1,15 @@
+{
+  "name": "بیمه موبایل سامان",
+  "short_name": "بیمه سامان",
+  "description": "سامانه فروش بیمه موبایل سامان-نمایندگی کد 1195 پارسا محمدنژاد",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#0B1220",
+  "theme_color": "#1A3F8F",
+  "lang": "fa",
+  "dir": "rtl",
+  "icons": [
+    { "src": "/icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any" },
+    { "src": "/brand/saman-logo.png", "sizes": "512x512", "type": "image/png", "purpose": "any" }
+  ]
+}
