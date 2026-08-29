@@ -96,21 +96,18 @@ export function StoreShell({ children }: { children: React.ReactNode }) {
           <p className="px-1 text-xs text-muted-foreground">بیمه موبایل سامان-نمایندگی کد 1195 پارسا محمدنژاد</p>
         </div>
         <nav className="flex flex-1 flex-col gap-1">{items}</nav>
-        <div className="flex flex-col gap-2">
-          <ThemeToggle fullWidth />
-          <Button variant="ghost" className="min-h-11 justify-start" onClick={logout}>
-            <LogOutIcon data-icon="inline-start" />
-            خروج
-          </Button>
-        </div>
       </aside>
       <div className="flex min-w-0 flex-1 flex-col">
-        <header className="flex items-center justify-between border-b bg-background px-4 py-3 md:hidden">
-          <BrandLogo size="header" />
-          <div className="flex items-center gap-2">
+        <header className="flex items-center justify-between border-b bg-background px-4 py-3">
+          <BrandLogo size="header" className="md:hidden" />
+          <div className="flex items-center gap-2 ms-auto">
             <ThemeToggle />
+            <Button variant="ghost" className="min-h-11 gap-2" onClick={logout}>
+              <LogOutIcon className="size-4" />
+              <span className="hidden sm:inline">خروج</span>
+            </Button>
             <Sheet>
-              <SheetTrigger render={<Button variant="outline" size="icon" className="min-h-11 min-w-11" />}>
+              <SheetTrigger render={<Button variant="outline" size="icon" className="min-h-11 min-w-11 md:hidden" />}>
                 <MenuIcon />
               </SheetTrigger>
               <SheetContent side="right">
@@ -118,10 +115,6 @@ export function StoreShell({ children }: { children: React.ReactNode }) {
                   <SheetTitle>منو</SheetTitle>
                 </SheetHeader>
                 <nav className="mt-4 flex flex-col gap-1">{items}</nav>
-                <Button variant="ghost" className="mt-4 min-h-11 justify-start" onClick={logout}>
-                  <LogOutIcon data-icon="inline-start" />
-                  خروج
-                </Button>
               </SheetContent>
             </Sheet>
           </div>

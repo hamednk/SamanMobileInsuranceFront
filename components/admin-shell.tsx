@@ -100,21 +100,18 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
           <p className="px-1 text-xs text-muted-foreground">پنل مدیریت بیمه سامان</p>
         </div>
         <nav className="flex flex-1 flex-col gap-1 overflow-y-auto">{items}</nav>
-        <div className="flex flex-col gap-2">
-          <ThemeToggle fullWidth />
-          <Button variant="ghost" className="min-h-11 justify-start" onClick={logout}>
-            <LogOutIcon data-icon="inline-start" />
-            خروج
-          </Button>
-        </div>
       </aside>
       <div className="flex min-w-0 flex-1 flex-col">
-        <header className="flex items-center justify-between border-b bg-background px-4 py-3 lg:hidden">
-          <BrandLogo size="header" />
-          <div className="flex items-center gap-2">
+        <header className="flex items-center justify-between border-b bg-background px-4 py-3">
+          <BrandLogo size="header" className="lg:hidden" />
+          <div className="flex items-center gap-2 ms-auto">
             <ThemeToggle />
+            <Button variant="ghost" className="min-h-11 gap-2" onClick={logout}>
+              <LogOutIcon className="size-4" />
+              <span className="hidden sm:inline">خروج</span>
+            </Button>
             <Sheet>
-              <SheetTrigger render={<Button variant="outline" size="icon" className="min-h-11 min-w-11" />}>
+              <SheetTrigger render={<Button variant="outline" size="icon" className="min-h-11 min-w-11 lg:hidden" />}>
                 <MenuIcon />
               </SheetTrigger>
               <SheetContent side="right">
@@ -122,10 +119,6 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
                   <SheetTitle>منو</SheetTitle>
                 </SheetHeader>
                 <nav className="mt-4 flex flex-col gap-1">{items}</nav>
-                <Button variant="ghost" className="mt-4 min-h-11 justify-start" onClick={logout}>
-                  <LogOutIcon data-icon="inline-start" />
-                  خروج
-                </Button>
               </SheetContent>
             </Sheet>
           </div>
