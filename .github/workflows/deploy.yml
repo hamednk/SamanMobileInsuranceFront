@@ -1,0 +1,53 @@
+name: Deploy Frontend
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Deploy to server
+        uses: appleboy/ssh-action@v1.2.0
+        with:
+          host: ${{ secrets.SERVER_HOST }}
+          username: ${{ secrets.SERVER_USER }}
+          key: ${{ secrets.SERVER_SSH_KEY }}
+          port: ${{ secrets.SERVER_PORT }}
+          script_stop: true
+          script: |
+            set -e
+
+            echo "===== FRONTEND DEPLOY START ====="
+
+            cd /var/www/frontend/SamanMobileInsuranceFront
+
+            echo "===== GIT STATUS ====="
+            git status
+
+            echo "===== UPDATE SOURCE ====="
+            git fetch origin main
+            git reset --hard origin/main
+
+            echo "===== INSTALL DEPENDENCIES ====="
+            npm ci
+
+            echo "===== BUILD ====="
+            npm run build
+
+            echo "===== RESTART FRONTEND ====="
+            sudo systemctl restart saman-insurance-frontend
+
+            echo "===== CHECK FRONTEND ====="
+            sleep 3
+
+            sudo systemctl is-active --quiet saman-insurance-frontend
+
+            curl --fail --silent \
+              http://127.0.0.1:3000/ \
+              > /dev/null
+
+            echo "===== FRONTEND DEPLOY SUCCESS ====="
