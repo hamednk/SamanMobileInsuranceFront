@@ -6,7 +6,6 @@ import { useEffect, useState, useSyncExternalStore } from "react";
 import {
   Building2Icon,
   CreditCardIcon,
-  FileSpreadsheetIcon,
   LayoutDashboardIcon,
   LogOutIcon,
   MenuIcon,
@@ -34,8 +33,6 @@ const nav = [
   { href: "/admin/customers", label: "مشتریان", icon: Building2Icon },
   { href: "/admin/brands", label: "برندها", icon: SmartphoneIcon },
   { href: "/admin/models", label: "مدل‌های موبایل", icon: SmartphoneIcon },
-  { href: "/admin/reports/stores", label: "گزارش فروشگاه‌ها", icon: FileSpreadsheetIcon },
-  { href: "/admin/reports/insurance", label: "گزارش بیمه‌ها", icon: FileSpreadsheetIcon },
   { href: "/admin/payments", label: "پرداخت‌ها", icon: CreditCardIcon },
   { href: "/admin/festivals", label: "جشنواره‌ها", icon: PartyPopperIcon },
   { href: "/admin/settings", label: "تنظیمات", icon: SettingsIcon },

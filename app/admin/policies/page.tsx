@@ -48,9 +48,12 @@ export default function AdminPoliciesPage() {
   return (
     <AdminShell>
       <div className="flex flex-col gap-4">
-        <div className="flex flex-wrap items-center justify-between gap-3">
-          <h1 className="text-2xl font-semibold">بیمه‌نامه‌ها</h1>
-          <Button className="min-h-11" onClick={exportExcel}>
+        <div className="flex flex-wrap items-start justify-between gap-3">
+          <div>
+            <h1 className="text-2xl font-semibold">بیمه‌نامه‌ها</h1>
+            <p className="mt-1 text-sm text-muted-foreground">لیست و گزارش بیمه‌نامه‌های صادرشده با فیلتر و خروجی اکسل</p>
+          </div>
+          <Button className="min-h-11 shrink-0" onClick={exportExcel}>
             خروجی اکسل
           </Button>
         </div>
@@ -84,6 +87,7 @@ export default function AdminPoliciesPage() {
                     <TableHead>شماره</TableHead>
                     <TableHead>فروشگاه</TableHead>
                     <TableHead>بیمه‌گذار</TableHead>
+                    <TableHead>IMEI</TableHead>
                     <TableHead>نوع</TableHead>
                     <TableHead>حق بیمه</TableHead>
                     <TableHead>وضعیت</TableHead>
@@ -98,6 +102,7 @@ export default function AdminPoliciesPage() {
                       <TableCell>
                         {String(p.customerFirstName ?? "")} {String(p.customerLastName ?? "")}
                       </TableCell>
+                      <TableCell>{toFaDigits(String(p.imei1 ?? ""))}</TableCell>
                       <TableCell>{statusLabel(String(p.insuranceType ?? ""))}</TableCell>
                       <TableCell>{formatToman(Number(p.premiumRial ?? 0))}</TableCell>
                       <TableCell>{statusLabel(String(p.status ?? ""))}</TableCell>

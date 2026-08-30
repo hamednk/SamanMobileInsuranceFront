@@ -1,17 +1,11 @@
 "use client";
 
 import { useQuery } from "@tanstack/react-query";
+import { FilterSelect } from "@/components/filter-select";
 import { JalaliDatePicker } from "@/components/jalali-date-picker";
 import { SearchField } from "@/components/search-field";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { api } from "@/lib/api";
 import type { LookupItem } from "@/types";
 
@@ -38,12 +32,6 @@ export const emptyPolicyFilters: PolicyFilterValues = {
   paymentStatus: "",
   status: "",
 };
-
-function pickSelectValue(value: string | null | undefined): string {
-  return value && value !== "all" ? value : "";
-}
-
-export { pickSelectValue };
 
 export function buildPolicyQuery(
   filters: PolicyFilterValues,
@@ -122,116 +110,69 @@ export function PolicyFiltersForm({
       </div>
       <div className="space-y-1.5">
         <Label>استان</Label>
-        <Select
-          value={filters.provinceId || "all"}
-          onValueChange={(value) =>
-            patch({ provinceId: pickSelectValue(value), cityId: "", storeId: "" })
-          }
-        >
-          <SelectTrigger className="min-h-11 w-full">
-            <SelectValue placeholder="همه استان‌ها" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">همه استان‌ها</SelectItem>
-            {provinces.map((p) => (
-              <SelectItem key={p.id} value={p.id}>
-                {p.name}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+        <FilterSelect
+          value={filters.provinceId}
+          onChange={(provinceId) => patch({ provinceId, cityId: "", storeId: "" })}
+          allLabel="همه"
+          options={provinces.map((p) => ({ value: p.id, label: p.name }))}
+        />
       </div>
       <div className="space-y-1.5">
         <Label>شهر</Label>
-        <Select
-          value={filters.cityId || "all"}
-          onValueChange={(value) => patch({ cityId: pickSelectValue(value) })}
+        <FilterSelect
+          value={filters.cityId}
+          onChange={(cityId) => patch({ cityId })}
+          allLabel="همه"
           disabled={!filters.provinceId}
-        >
-          <SelectTrigger className="min-h-11 w-full">
-            <SelectValue placeholder="همه شهرها" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">همه شهرها</SelectItem>
-            {cities.map((c) => (
-              <SelectItem key={c.id} value={c.id}>
-                {c.name}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+          options={cities.map((c) => ({ value: c.id, label: c.name }))}
+        />
       </div>
       {showStoreFilter ? (
         <div className="space-y-1.5 md:col-span-2">
           <Label>فروشگاه</Label>
-          <Select
-            value={filters.storeId || "all"}
-            onValueChange={(value) => patch({ storeId: pickSelectValue(value) })}
-          >
-            <SelectTrigger className="min-h-11 w-full">
-              <SelectValue placeholder="همه فروشگاه‌ها" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">همه فروشگاه‌ها</SelectItem>
-              {(stores?.data ?? []).map((s) => (
-                <SelectItem key={s.id} value={s.id}>
-                  {s.storeName}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+          <FilterSelect
+            value={filters.storeId}
+            onChange={(storeId) => patch({ storeId })}
+            allLabel="همه"
+            options={(stores?.data ?? []).map((s) => ({ value: s.id, label: s.storeName }))}
+          />
         </div>
       ) : null}
       <div className="space-y-1.5">
         <Label>نوع موبایل</Label>
-        <Select
-          value={filters.insuranceType || "all"}
-          onValueChange={(value) => patch({ insuranceType: pickSelectValue(value) })}
-        >
-          <SelectTrigger className="min-h-11 w-full">
-            <SelectValue placeholder="همه" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">همه</SelectItem>
-            <SelectItem value="New">آکبند</SelectItem>
-            <SelectItem value="Used">کارکرده</SelectItem>
-          </SelectContent>
-        </Select>
+        <FilterSelect
+          value={filters.insuranceType}
+          onChange={(insuranceType) => patch({ insuranceType })}
+          options={[
+            { value: "New", label: "آکبند" },
+            { value: "Used", label: "کارکرده" },
+          ]}
+        />
       </div>
       <div className="space-y-1.5">
         <Label>وضعیت پرداخت</Label>
-        <Select
-          value={filters.paymentStatus || "all"}
-          onValueChange={(value) => patch({ paymentStatus: pickSelectValue(value) })}
-        >
-          <SelectTrigger className="min-h-11 w-full">
-            <SelectValue placeholder="همه" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">همه</SelectItem>
-            <SelectItem value="Paid">موفق</SelectItem>
-            <SelectItem value="Pending">در انتظار</SelectItem>
-            <SelectItem value="Failed">ناموفق</SelectItem>
-          </SelectContent>
-        </Select>
+        <FilterSelect
+          value={filters.paymentStatus}
+          onChange={(paymentStatus) => patch({ paymentStatus })}
+          options={[
+            { value: "Paid", label: "موفق" },
+            { value: "Pending", label: "در انتظار" },
+            { value: "Failed", label: "ناموفق" },
+          ]}
+        />
       </div>
       <div className="space-y-1.5">
         <Label>وضعیت بیمه‌نامه</Label>
-        <Select
-          value={filters.status || "all"}
-          onValueChange={(value) => patch({ status: pickSelectValue(value) })}
-        >
-          <SelectTrigger className="min-h-11 w-full">
-            <SelectValue placeholder="همه" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">همه</SelectItem>
-            <SelectItem value="Issued">صادر شده</SelectItem>
-            <SelectItem value="AwaitingPayment">در انتظار پرداخت</SelectItem>
-            <SelectItem value="Expired">منقضی‌شده</SelectItem>
-            <SelectItem value="Cancelled">لغو شده</SelectItem>
-          </SelectContent>
-        </Select>
+        <FilterSelect
+          value={filters.status}
+          onChange={(status) => patch({ status })}
+          options={[
+            { value: "Issued", label: "صادر شده" },
+            { value: "AwaitingPayment", label: "در انتظار پرداخت" },
+            { value: "Expired", label: "منقضی‌شده" },
+            { value: "Cancelled", label: "لغو شده" },
+          ]}
+        />
       </div>
       <div className="space-y-1.5 md:col-span-2 xl:col-span-4">
         <Label>جستجو</Label>

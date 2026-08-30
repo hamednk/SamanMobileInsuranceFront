@@ -4,17 +4,10 @@ import { useQuery } from "@tanstack/react-query";
 import { useState } from "react";
 import { AdminShell } from "@/components/admin-shell";
 import { DataPagination } from "@/components/data-pagination";
+import { FilterSelect } from "@/components/filter-select";
 import { Label } from "@/components/ui/label";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { api } from "@/lib/api";
-import { pickSelectValue } from "@/components/policy-filters-form";
 import { formatJalali, formatToman, statusLabel, toFaDigits } from "@/lib/format";
 
 export default function AdminPaymentsPage() {
@@ -38,23 +31,18 @@ export default function AdminPaymentsPage() {
         <h1 className="text-2xl font-semibold">پرداخت‌ها</h1>
         <div className="w-full max-w-xs space-y-1.5">
           <Label>وضعیت پرداخت</Label>
-          <Select
-            value={status || "all"}
-            onValueChange={(value) => {
-              setStatus(pickSelectValue(value));
+          <FilterSelect
+            value={status}
+            onChange={(next) => {
+              setStatus(next);
               setPage(1);
             }}
-          >
-            <SelectTrigger className="min-h-11 w-full">
-              <SelectValue placeholder="همه" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">همه</SelectItem>
-              <SelectItem value="Paid">موفق</SelectItem>
-              <SelectItem value="Pending">در انتظار</SelectItem>
-              <SelectItem value="Failed">ناموفق</SelectItem>
-            </SelectContent>
-          </Select>
+            options={[
+              { value: "Paid", label: "موفق" },
+              { value: "Pending", label: "در انتظار" },
+              { value: "Failed", label: "ناموفق" },
+            ]}
+          />
         </div>
         <div className="overflow-x-auto rounded-xl border border-primary/10 bg-card/80 shadow-sm backdrop-blur">
           <Table>
