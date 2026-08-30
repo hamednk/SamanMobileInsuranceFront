@@ -5,49 +5,60 @@ on:
     branches:
       - main
 
+  workflow_dispatch:
+
 jobs:
   deploy:
+    name: Build and Deploy Frontend
     runs-on: ubuntu-latest
 
     steps:
-      - name: Deploy to server
-        uses: appleboy/ssh-action@v1.2.0
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
         with:
-          host: ${{ secrets.SERVER_HOST }}
-          username: ${{ secrets.SERVER_USER }}
-          key: ${{ secrets.SERVER_SSH_KEY }}
-          port: ${{ secrets.SERVER_PORT }}
-          script_stop: true
-          script: |
-            set -e
+          node-version: '20'
+          cache: npm
 
-            echo "===== FRONTEND DEPLOY START ====="
+      - name: Install Dependencies
+        run: npm ci
 
-            cd /var/www/frontend/SamanMobileInsuranceFront
+      - name: Build
+        run: npm run build
 
-            echo "===== GIT STATUS ====="
-            git status
+      - name: Prepare Standalone
+        run: |
+          cp -r public .next/standalone/public
+          cp -r .next/static .next/standalone/.next/static
 
-            echo "===== UPDATE SOURCE ====="
-            git fetch origin main
-            git reset --hard origin/main
+      - name: Setup SSH
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.SERVER_SSH_KEY }}" > ~/.ssh/deploy_key
+          chmod 600 ~/.ssh/deploy_key
+          ssh-keyscan -p ${{ secrets.SERVER_PORT }} ${{ secrets.SERVER_HOST }} >> ~/.ssh/known_hosts
 
-            echo "===== INSTALL DEPENDENCIES ====="
-            npm ci
+      - name: Upload Frontend
+        run: |
+          rsync -avz --delete \
+            -e "ssh -i ~/.ssh/deploy_key -p ${{ secrets.SERVER_PORT }}" \
+            .next/standalone/ \
+            ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }}:/var/www/frontend/SamanMobileInsuranceFront/.next/standalone/
 
-            echo "===== BUILD ====="
-            npm run build
+      - name: Restart Frontend
+        run: |
+          ssh \
+            -i ~/.ssh/deploy_key \
+            -p ${{ secrets.SERVER_PORT }} \
+            ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }} \
+            "sudo systemctl restart saman-insurance-frontend"
 
-            echo "===== RESTART FRONTEND ====="
-            sudo systemctl restart saman-insurance-frontend
-
-            echo "===== CHECK FRONTEND ====="
-            sleep 3
-
-            sudo systemctl is-active --quiet saman-insurance-frontend
-
-            curl --fail --silent \
-              http://127.0.0.1:3000/ \
-              > /dev/null
-
-            echo "===== FRONTEND DEPLOY SUCCESS ====="
+      - name: Frontend Health Check
+        run: |
+          ssh \
+            -i ~/.ssh/deploy_key \
+            -p ${{ secrets.SERVER_PORT }} \
+            ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }} \
+            "sudo systemctl is-active --quiet saman-insurance-frontend"
