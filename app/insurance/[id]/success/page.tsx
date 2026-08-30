@@ -7,7 +7,7 @@ import { BadgeCheckIcon, FileTextIcon, ListIcon } from "lucide-react";
 import { StoreShell } from "@/components/store-shell";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { WizardStepper } from "@/features/insurance/stepper";
 import { api } from "@/lib/api";
 import { formatJalali, formatToman, statusLabel, toFaDigits } from "@/lib/format";
@@ -30,6 +30,7 @@ export default function SuccessPage() {
               <BadgeCheckIcon className="size-6" />
             </div>
             <CardTitle>پرداخت با موفقیت انجام شد</CardTitle>
+            <CardDescription>بیمه نامه شما از تاریخ صدور تا 48 ساعت کاری صادر خواهد شد.</CardDescription>
           </CardHeader>
           <CardContent className="flex flex-col gap-3 text-sm">
             <div className="flex flex-wrap items-center gap-2">

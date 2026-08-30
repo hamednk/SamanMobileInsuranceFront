@@ -57,6 +57,7 @@ type PolicyFiltersProps = {
   onApply: () => void;
   onReset?: () => void;
   showStoreFilter?: boolean;
+  showLocationFilters?: boolean;
 };
 
 type StoreOption = { id: string; storeName: string };
@@ -67,10 +68,12 @@ export function PolicyFiltersForm({
   onApply,
   onReset,
   showStoreFilter = true,
+  showLocationFilters = true,
 }: PolicyFiltersProps) {
   const { data: provinces = [] } = useQuery({
     queryKey: ["admin-provinces"],
     queryFn: () => api.get<LookupItem[]>("/api/v1/admin/provinces"),
+    enabled: showLocationFilters,
   });
   const { data: cities = [] } = useQuery({
     queryKey: ["admin-cities", filters.provinceId],
@@ -80,7 +83,7 @@ export function PolicyFiltersForm({
           ? `/api/v1/admin/cities?provinceId=${filters.provinceId}`
           : "/api/v1/admin/cities"
       ),
-    enabled: Boolean(filters.provinceId),
+    enabled: showLocationFilters && Boolean(filters.provinceId),
   });
   const { data: stores } = useQuery({
     queryKey: ["admin-stores-lookup"],
@@ -108,25 +111,29 @@ export function PolicyFiltersForm({
         <Label>تا تاریخ</Label>
         <JalaliDatePicker value={filters.toDate} onChange={(toDate) => patch({ toDate })} placeholder="تا تاریخ" />
       </div>
-      <div className="space-y-1.5">
-        <Label>استان</Label>
-        <FilterSelect
-          value={filters.provinceId}
-          onChange={(provinceId) => patch({ provinceId, cityId: "", storeId: "" })}
-          allLabel="همه"
-          options={provinces.map((p) => ({ value: p.id, label: p.name }))}
-        />
-      </div>
-      <div className="space-y-1.5">
-        <Label>شهر</Label>
-        <FilterSelect
-          value={filters.cityId}
-          onChange={(cityId) => patch({ cityId })}
-          allLabel="همه"
-          disabled={!filters.provinceId}
-          options={cities.map((c) => ({ value: c.id, label: c.name }))}
-        />
-      </div>
+      {showLocationFilters ? (
+        <>
+          <div className="space-y-1.5">
+            <Label>استان</Label>
+            <FilterSelect
+              value={filters.provinceId}
+              onChange={(provinceId) => patch({ provinceId, cityId: "", storeId: "" })}
+              allLabel="همه"
+              options={provinces.map((p) => ({ value: p.id, label: p.name }))}
+            />
+          </div>
+          <div className="space-y-1.5">
+            <Label>شهر</Label>
+            <FilterSelect
+              value={filters.cityId}
+              onChange={(cityId) => patch({ cityId })}
+              allLabel="همه"
+              disabled={!filters.provinceId}
+              options={cities.map((c) => ({ value: c.id, label: c.name }))}
+            />
+          </div>
+        </>
+      ) : null}
       {showStoreFilter ? (
         <div className="space-y-1.5 md:col-span-2">
           <Label>فروشگاه</Label>

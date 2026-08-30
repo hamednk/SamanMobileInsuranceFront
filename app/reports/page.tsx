@@ -5,6 +5,7 @@ import {
   BadgeCheckIcon,
   Building2Icon,
   ChartColumnIcon,
+  FileSpreadsheetIcon,
   RefreshCwIcon,
   ShieldIcon,
   SmartphoneIcon,
@@ -17,8 +18,8 @@ import { StatCard } from "@/components/stat-card";
 import { StoreShell } from "@/components/store-shell";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { api } from "@/lib/api";
-import { formatPercent, formatToman, toFaDigits } from "@/lib/format";
+import { api, notifyError } from "@/lib/api";
+import { formatToman, toFaDigits } from "@/lib/format";
 
 type PerformanceReport = {
   from: string;
@@ -34,8 +35,6 @@ type PerformanceReport = {
   companyRemittanceRial: number;
   totalMobilePriceRial: number;
   averagePremiumRial: number;
-  storeCommissionPercent: number;
-  companyRemittancePercent: number;
   storeProfitRial: number;
   daily: { date: string; count: number; premiumRial: number }[];
   topBrands: { brand: string; count: number; premiumRial: number }[];
@@ -76,7 +75,7 @@ export default function StorePerformancePage() {
           <div>
             <h1 className="text-2xl font-semibold">گزارش عملکرد</h1>
             <p className="mt-1 text-sm text-muted-foreground">
-              سود فروشگاه = مبلغ دریافتی از مشتری − مبلغ واریزی به شرکت
+              سود فروشگاه = مبلغ دریافتی از مشتری − حق بیمه (سهم شرکت). درصد سهم در تنظیمات وجود ندارد.
             </p>
           </div>
           <form
@@ -99,6 +98,22 @@ export default function StorePerformancePage() {
               <RefreshCwIcon />
               بروزرسانی
             </Button>
+            <Button
+              type="button"
+              variant="outline"
+              className="min-h-11"
+              onClick={async () => {
+                try {
+                  const qs = new URLSearchParams({ fromDate: applied.from, toDate: applied.to, status: "Issued" });
+                  await api.download(`/api/v1/insurance/mine/export?${qs.toString()}`, "store-performance.xlsx");
+                } catch (error) {
+                  notifyError(error);
+                }
+              }}
+            >
+              <FileSpreadsheetIcon />
+              خروجی اکسل
+            </Button>
           </form>
         </div>
 
@@ -118,14 +133,14 @@ export default function StorePerformancePage() {
             loading={isLoading}
           />
           <StatCard
-            title={`واریز به شرکت (${data ? formatPercent(data.companyRemittancePercent) : "…"})`}
+            title="واریز به شرکت (سهم بیمه)"
             value={data ? formatToman(data.companyRemittanceRial) : null}
             tone="orange"
             icon={<Building2Icon className="size-5" />}
             loading={isLoading}
           />
           <StatCard
-            title={`سود فروشگاه (${data ? formatPercent(data.storeCommissionPercent) : "…"})`}
+            title="سود فروشگاه"
             value={data ? formatToman(data.storeProfitRial) : null}
             tone="teal"
             icon={<TrendingUpIcon className="size-5" />}
@@ -150,7 +165,7 @@ export default function StorePerformancePage() {
               <p className="mt-2 text-lg font-semibold">{data ? formatToman(data.customerReceivedRial) : "—"}</p>
             </div>
             <div className="rounded-xl border bg-background/70 p-4">
-              <p className="text-xs text-muted-foreground">مبلغ واریزی به شرکت</p>
+              <p className="text-xs text-muted-foreground">مبلغ واریزی به شرکت (حق بیمه)</p>
               <p className="mt-2 text-lg font-semibold">{data ? formatToman(data.companyRemittanceRial) : "—"}</p>
             </div>
             <div className="rounded-xl border bg-background/70 p-4">

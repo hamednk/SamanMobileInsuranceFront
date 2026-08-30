@@ -26,8 +26,8 @@ export function formatNumber(value: number | string | null | undefined, fraction
 }
 
 /** Format typed amount input: strip non-digits, group by 3, show Persian digits. */
-export function formatAmountInput(raw: string): string {
-  const digits = toEnDigits(raw).replace(/\D/g, "");
+export function formatAmountInput(raw: string, maxDigits = 15): string {
+  const digits = toEnDigits(raw).replace(/\D/g, "").slice(0, maxDigits);
   if (!digits) return "";
   return toFaDigits(digits.replace(/\B(?=(\d{3})+(?!\d))/g, ","));
 }
@@ -35,6 +35,11 @@ export function formatAmountInput(raw: string): string {
 export function parseAmountInput(raw: string): number {
   const digits = toEnDigits(raw).replace(/\D/g, "");
   return digits ? Number(digits) : 0;
+}
+
+/** Keep only digits (Persian/Arabic/Latin) up to maxDigits, shown as Persian. */
+export function limitDigitInput(raw: string, maxDigits: number): string {
+  return toFaDigits(toEnDigits(raw).replace(/\D/g, "").slice(0, maxDigits));
 }
 
 export function formatRial(rial: number): string {

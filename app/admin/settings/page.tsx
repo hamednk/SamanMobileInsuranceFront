@@ -19,8 +19,12 @@ export default function AdminSettingsPage() {
   const filtered = useMemo(() => {
     const q = search.trim().toLowerCase();
     const rows = data ?? [];
-    if (!q) return rows;
-    return rows.filter((s) => [s.key, s.value, s.description].filter(Boolean).some((v) => String(v).toLowerCase().includes(q)));
+    if (!q) return rows.filter((s) => s.key !== "StoreCommissionPercent");
+    return rows.filter(
+      (s) =>
+        s.key !== "StoreCommissionPercent" &&
+        [s.key, s.value, s.description].filter(Boolean).some((v) => String(v).toLowerCase().includes(q))
+    );
   }, [data, search]);
   const update = useMutation({
     mutationFn: ({ key, value }: { key: string; value: string }) => api.put(`/api/v1/admin/settings/${key}`, { value }),

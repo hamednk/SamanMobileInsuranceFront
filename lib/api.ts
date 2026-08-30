@@ -93,6 +93,15 @@ export const api = {
     if (!res.ok) throw new ApiError("دانلود ناموفق بود.", res.status);
     return res.blob();
   },
+  download: async (path: string, filename: string) => {
+    const blob = await api.blob(path);
+    const url = URL.createObjectURL(blob);
+    const anchor = document.createElement("a");
+    anchor.href = url;
+    anchor.download = filename;
+    anchor.click();
+    URL.revokeObjectURL(url);
+  },
 };
 
 export function notifyError(error: unknown) {

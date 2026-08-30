@@ -16,6 +16,7 @@ import {
   WalletIcon,
 } from "lucide-react";
 import { DetailField, DetailHero, DetailSection } from "@/components/detail-panel";
+import { PolicyImagesButton } from "@/features/insurance/policy-images-dialog";
 import { StoreShell } from "@/components/store-shell";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -74,16 +75,19 @@ export default function PolicyDetailPage() {
             </Badge>
           }
           actions={
-            continueHref ? (
-              <Button className="min-h-11" render={<Link href={continueHref} />}>
-                {getPolicyContinueLabel(data.status)}
-                <ArrowLeftIcon data-icon="inline-end" className="size-4" />
-              </Button>
-            ) : (
-              <Button variant="outline" className="min-h-11" render={<Link href="/policies" />}>
-                بازگشت به لیست
-              </Button>
-            )
+            <div className="flex flex-wrap gap-2">
+              <PolicyImagesButton policyId={data.id} scope="store" title="تصاویر بیمه‌نامه" />
+              {continueHref ? (
+                <Button className="min-h-11" render={<Link href={continueHref} />}>
+                  {getPolicyContinueLabel(data.status)}
+                  <ArrowLeftIcon data-icon="inline-end" className="size-4" />
+                </Button>
+              ) : (
+                <Button variant="outline" className="min-h-11" render={<Link href="/policies" />}>
+                  بازگشت به لیست
+                </Button>
+              )}
+            </div>
           }
         />
 
@@ -98,14 +102,25 @@ export default function PolicyDetailPage() {
 
         <div className="grid gap-3 sm:grid-cols-3">
           <div className="rounded-2xl border border-sky-500/25 bg-gradient-to-br from-sky-500/15 to-transparent p-4">
-            <p className="text-xs text-muted-foreground">حق بیمه</p>
+            <p className="text-xs text-muted-foreground">حق بیمه (سهم شرکت)</p>
             <p className="mt-1 text-lg font-semibold text-sky-800 dark:text-sky-200">{formatToman(data.premiumRial)}</p>
           </div>
+          <div className="rounded-2xl border border-amber-500/25 bg-gradient-to-br from-amber-500/15 to-transparent p-4">
+            <p className="text-xs text-muted-foreground">دریافتی از مشتری</p>
+            <p className="mt-1 text-lg font-semibold">{formatToman(data.customerChargedRial)}</p>
+          </div>
+          <div className="rounded-2xl border border-teal-500/25 bg-gradient-to-br from-teal-500/15 to-transparent p-4">
+            <p className="text-xs text-muted-foreground">سود فروشگاه</p>
+            <p className="mt-1 text-lg font-semibold text-primary">{formatToman(data.storeProfitRial)}</p>
+          </div>
+        </div>
+
+        <div className="grid gap-3 sm:grid-cols-2">
           <div className="rounded-2xl border border-primary/20 bg-gradient-to-br from-primary/10 to-transparent p-4">
             <p className="text-xs text-muted-foreground">وضعیت پرداخت</p>
             <p className="mt-1 text-lg font-semibold">{statusLabel(data.paymentStatus)}</p>
           </div>
-          <div className="rounded-2xl border border-teal-500/25 bg-gradient-to-br from-teal-500/15 to-transparent p-4">
+          <div className="rounded-2xl border border-indigo-500/25 bg-gradient-to-br from-indigo-500/15 to-transparent p-4">
             <p className="text-xs text-muted-foreground">تاریخ شروع</p>
             <p className="mt-1 text-lg font-semibold">{formatJalali(data.startDate)}</p>
           </div>
@@ -132,7 +147,9 @@ export default function PolicyDetailPage() {
           <DetailField label="سریال ۱" value={data.imei1} icon={<HashIcon className="size-4" />} mono />
           {data.imei2 ? <DetailField label="سریال ۲" value={data.imei2} icon={<HashIcon className="size-4" />} mono /> : null}
           <DetailField label="قیمت موبایل" value={formatToman(data.mobilePriceRial)} icon={<WalletIcon className="size-4" />} />
-          <DetailField label="حق بیمه" value={formatToman(data.premiumRial)} icon={<CreditCardIcon className="size-4" />} />
+          <DetailField label="حق بیمه (سهم شرکت)" value={formatToman(data.premiumRial)} icon={<CreditCardIcon className="size-4" />} />
+          <DetailField label="دریافتی از مشتری" value={formatToman(data.customerChargedRial)} icon={<WalletIcon className="size-4" />} />
+          <DetailField label="سود فروشگاه" value={formatToman(data.storeProfitRial)} icon={<CreditCardIcon className="size-4" />} />
         </DetailSection>
 
         <DetailSection title="تاریخ‌ها" icon={<CalendarIcon className="size-4" />}>

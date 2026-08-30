@@ -63,6 +63,8 @@ export type Policy = {
   paymentStatus: string;
   mobilePriceRial: number;
   premiumRial: number;
+  customerChargedRial: number;
+  storeProfitRial: number;
   imei1: string;
   imei2: string | null;
   startDate: string;
@@ -96,6 +98,8 @@ export type PolicyListItem = {
   status: string;
   paymentStatus: string;
   premiumRial: number;
+  customerChargedRial: number;
+  storeProfitRial: number;
   customerName: string;
   brandName: string;
   modelName: string;

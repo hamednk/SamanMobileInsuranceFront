@@ -1,6 +1,7 @@
 "use client";
 
 import { useQuery } from "@tanstack/react-query";
+import Link from "next/link";
 import { useState } from "react";
 import { AdminShell } from "@/components/admin-shell";
 import { DataPagination } from "@/components/data-pagination";
@@ -13,6 +14,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Empty, EmptyHeader, EmptyTitle } from "@/components/ui/empty";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { PolicyImagesButton } from "@/features/insurance/policy-images-dialog";
 import { api, notifyError } from "@/lib/api";
 import { formatToman, statusLabel, toFaDigits } from "@/lib/format";
 
@@ -33,13 +35,7 @@ export default function AdminPoliciesPage() {
   async function exportExcel() {
     try {
       const qs = buildPolicyQuery(appliedFilters, 1).toString();
-      const blob = await api.blob(`/api/v1/admin/policies/export?${qs}`);
-      const url = URL.createObjectURL(blob);
-      const anchor = document.createElement("a");
-      anchor.href = url;
-      anchor.download = "policies.xlsx";
-      anchor.click();
-      URL.revokeObjectURL(url);
+      await api.download(`/api/v1/admin/policies/export?${qs}`, "policies.xlsx");
     } catch (error) {
       notifyError(error);
     }
@@ -92,12 +88,23 @@ export default function AdminPoliciesPage() {
                     <TableHead>حق بیمه</TableHead>
                     <TableHead>وضعیت</TableHead>
                     <TableHead>پرداخت</TableHead>
+                    <TableHead>عملیات</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {items.map((p, index) => (
-                    <TableRow key={String(p.id ?? p.policyNumber ?? index)}>
-                      <TableCell>{toFaDigits(String(p.policyNumber ?? "—"))}</TableCell>
+                  {items.map((p, index) => {
+                    const id = String(p.id ?? "").trim();
+                    return (
+                    <TableRow key={id || String(p.policyNumber ?? index)}>
+                      <TableCell>
+                        {id ? (
+                          <Link href={`/admin/policies/${id}`} className="text-primary">
+                            {toFaDigits(String(p.policyNumber ?? "—"))}
+                          </Link>
+                        ) : (
+                          toFaDigits(String(p.policyNumber ?? "—"))
+                        )}
+                      </TableCell>
                       <TableCell>{String(p.storeName ?? "")}</TableCell>
                       <TableCell>
                         {String(p.customerFirstName ?? "")} {String(p.customerLastName ?? "")}
@@ -107,8 +114,19 @@ export default function AdminPoliciesPage() {
                       <TableCell>{formatToman(Number(p.premiumRial ?? 0))}</TableCell>
                       <TableCell>{statusLabel(String(p.status ?? ""))}</TableCell>
                       <TableCell>{statusLabel(String(p.paymentStatus ?? ""))}</TableCell>
+                      <TableCell className="min-w-52">
+                        {id ? (
+                          <div className="flex flex-wrap items-center gap-2 whitespace-nowrap">
+                            <PolicyImagesButton policyId={id} scope="admin" />
+                            <Button size="sm" variant="outline" className="min-h-10" render={<Link href={`/admin/policies/${id}`} />}>
+                              جزئیات
+                            </Button>
+                          </div>
+                        ) : null}
+                      </TableCell>
                     </TableRow>
-                  ))}
+                    );
+                  })}
                 </TableBody>
               </Table>
             </div>

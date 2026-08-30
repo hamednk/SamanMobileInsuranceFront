@@ -3,15 +3,21 @@
 import { useQuery } from "@tanstack/react-query";
 import Link from "next/link";
 import { useMemo, useState } from "react";
-import { ArrowLeftIcon, CircleAlertIcon } from "lucide-react";
-import { SearchField } from "@/components/search-field";
+import { ArrowLeftIcon, CircleAlertIcon, FileSpreadsheetIcon } from "lucide-react";
+import {
+  buildPolicyQuery,
+  emptyPolicyFilters,
+  PolicyFiltersForm,
+  type PolicyFilterValues,
+} from "@/components/policy-filters-form";
 import { StoreShell } from "@/components/store-shell";
 import { DataPagination } from "@/components/data-pagination";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Empty, EmptyDescription, EmptyHeader, EmptyTitle } from "@/components/ui/empty";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { api } from "@/lib/api";
+import { PolicyImagesButton } from "@/features/insurance/policy-images-dialog";
+import { api, notifyError } from "@/lib/api";
 import { formatJalali, formatToman, statusLabel, toFaDigits } from "@/lib/format";
 import {
   getPolicyContinueHint,
@@ -22,31 +28,46 @@ import {
 import type { PolicyListItem } from "@/types";
 
 export default function PoliciesPage() {
-  const [search, setSearch] = useState("");
   const [page, setPage] = useState(1);
+  const [filters, setFilters] = useState<PolicyFilterValues>(emptyPolicyFilters);
+  const [appliedFilters, setAppliedFilters] = useState<PolicyFilterValues>(emptyPolicyFilters);
+
   const { data } = useQuery({
-    queryKey: ["policies", search, page],
+    queryKey: ["policies", appliedFilters, page],
     queryFn: () =>
-      api.getPaged<PolicyListItem[]>(
-        `/api/v1/insurance/mine?page=${page}&pageSize=20&search=${encodeURIComponent(search)}`
-      ),
+      api.getPaged<PolicyListItem[]>(`/api/v1/insurance/mine?${buildPolicyQuery(appliedFilters, page).toString()}`),
   });
 
-  const items = data?.data ?? [];
+  const items = useMemo(() => data?.data ?? [], [data]);
   const incomplete = useMemo(() => items.filter((p) => isIncompletePolicy(p.status)), [items]);
+
+  async function exportExcel() {
+    try {
+      const qs = buildPolicyQuery(appliedFilters, 1).toString();
+      await api.download(`/api/v1/insurance/mine/export?${qs}`, "store-policies.xlsx");
+    } catch (error) {
+      notifyError(error);
+    }
+  }
 
   return (
     <StoreShell>
       <div className="flex flex-col gap-6">
-        <div>
-          <h1 className="text-2xl font-semibold">بیمه‌های من</h1>
-          <p className="mt-1 text-sm text-muted-foreground">
-            لیست بیمه‌نامه‌ها و موارد ناقص. تمدیدها در بخش{" "}
-            <Link href="/renewals" className="text-primary underline-offset-4 hover:underline">
-              تمدید
-            </Link>{" "}
-            رصد می‌شوند.
-          </p>
+        <div className="flex flex-wrap items-start justify-between gap-3">
+          <div>
+            <h1 className="text-2xl font-semibold">بیمه‌های من</h1>
+            <p className="mt-1 text-sm text-muted-foreground">
+              لیست بیمه‌نامه‌ها و موارد ناقص. تمدیدها در بخش{" "}
+              <Link href="/renewals" className="text-primary underline-offset-4 hover:underline">
+                تمدید
+              </Link>{" "}
+              رصد می‌شوند.
+            </p>
+          </div>
+          <Button className="min-h-11 shrink-0" onClick={exportExcel}>
+            <FileSpreadsheetIcon className="size-4" />
+            خروجی اکسل
+          </Button>
         </div>
 
         {incomplete.length > 0 ? (
@@ -86,13 +107,20 @@ export default function PoliciesPage() {
           </section>
         ) : null}
 
-        <SearchField
-          value={search}
-          onChange={(value) => {
-            setSearch(value);
+        <PolicyFiltersForm
+          filters={filters}
+          onChange={setFilters}
+          onApply={() => {
+            setPage(1);
+            setAppliedFilters(filters);
+          }}
+          onReset={() => {
+            setFilters(emptyPolicyFilters);
+            setAppliedFilters(emptyPolicyFilters);
             setPage(1);
           }}
-          placeholder="جستجو بر اساس نام، کد ملی، IMEI یا شماره بیمه‌نامه"
+          showStoreFilter={false}
+          showLocationFilters={false}
         />
 
         {items.length === 0 ? (
@@ -111,7 +139,9 @@ export default function PoliciesPage() {
                     <TableHead>شماره</TableHead>
                     <TableHead>بیمه‌گذار</TableHead>
                     <TableHead>موبایل</TableHead>
-                    <TableHead>مبلغ</TableHead>
+                    <TableHead>سهم شرکت</TableHead>
+                    <TableHead>دریافتی از مشتری</TableHead>
+                    <TableHead>سود فروشگاه</TableHead>
                     <TableHead>وضعیت</TableHead>
                     <TableHead>تاریخ</TableHead>
                     <TableHead>عملیات</TableHead>
@@ -132,6 +162,8 @@ export default function PoliciesPage() {
                           {p.brandName} {p.modelName}
                         </TableCell>
                         <TableCell>{formatToman(p.premiumRial)}</TableCell>
+                        <TableCell>{formatToman(p.customerChargedRial)}</TableCell>
+                        <TableCell className="font-medium text-primary">{formatToman(p.storeProfitRial)}</TableCell>
                         <TableCell>
                           <Badge variant={isIncompletePolicy(p.status) ? "outline" : "secondary"}>
                             {statusLabel(p.status)}
@@ -139,15 +171,18 @@ export default function PoliciesPage() {
                         </TableCell>
                         <TableCell>{formatJalali(p.createdAt)}</TableCell>
                         <TableCell>
-                          {href ? (
-                            <Button size="sm" className="min-h-10" render={<Link href={href} />}>
-                              {getPolicyContinueLabel(p.status)}
-                            </Button>
-                          ) : (
-                            <Button size="sm" variant="outline" className="min-h-10" render={<Link href={`/insurance/${p.id}`} />}>
-                              مشاهده
-                            </Button>
-                          )}
+                          <div className="flex flex-wrap gap-2">
+                            <PolicyImagesButton policyId={p.id} scope="store" />
+                            {href ? (
+                              <Button size="sm" className="min-h-10" render={<Link href={href} />}>
+                                {getPolicyContinueLabel(p.status)}
+                              </Button>
+                            ) : (
+                              <Button size="sm" variant="outline" className="min-h-10" render={<Link href={`/insurance/${p.id}`} />}>
+                                مشاهده
+                              </Button>
+                            )}
+                          </div>
                         </TableCell>
                       </TableRow>
                     );

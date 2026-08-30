@@ -7,7 +7,13 @@ import { PublicAuthChrome } from "@/components/theme-toggle";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Spinner } from "@/components/ui/spinner";
-import { API_URL, notifyError } from "@/lib/api";
+import { api, notifyError } from "@/lib/api";
+
+type PaymentComplete = {
+  paid: boolean;
+  policyId: string;
+  nextPath: string;
+};
 
 function MockGatewayInner() {
   const search = useSearchParams();
@@ -24,13 +30,18 @@ function MockGatewayInner() {
         return;
       }
 
-      // Hit API callback from the browser; server redirects to success URL.
-      // Session is in localStorage so returning to the app keeps the user logged in.
-      const callback = `${API_URL}/api/v1/payments/callback?authority=${encodeURIComponent(authority)}&status=OK`;
-      window.location.assign(callback);
+      const result = await api.post<PaymentComplete>("/api/v1/payments/complete", {
+        authority,
+        status: "OK",
+      });
+      const next = result.nextPath || (result.policyId ? `/insurance/${result.policyId}/success` : null);
+      router.replace(next || (policyId ? `/insurance/${policyId}/success` : "/policies"));
     } catch (error) {
       notifyError(error);
       setPending(null);
+      if (policyId) {
+        router.replace(`/insurance/${policyId}/payment?failed=1`);
+      }
     }
   }
 

@@ -2,47 +2,67 @@
 
 import { useQuery } from "@tanstack/react-query";
 import { useParams, useRouter } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 import { StoreShell } from "@/components/store-shell";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { CameraCapture } from "@/features/insurance/camera-capture";
 import { WizardStepper } from "@/features/insurance/stepper";
-import { api, API_URL, notifyError } from "@/lib/api";
+import { api, notifyError } from "@/lib/api";
+import { policyImageApiPath } from "@/lib/policy-images";
 import { toFaDigits } from "@/lib/format";
-import { getAccessToken } from "@/lib/session";
 import type { Policy } from "@/types";
+
+function useImagePreview(policyId: string, imageId?: string) {
+  const { data: blob } = useQuery({
+    queryKey: ["policy-image-preview", policyId, imageId],
+    queryFn: () => api.blob(policyImageApiPath(policyId, imageId!, "store")),
+    enabled: Boolean(policyId && imageId),
+    staleTime: 60_000,
+  });
+
+  const url = useMemo(() => (blob ? URL.createObjectURL(blob) : null), [blob]);
+
+  useEffect(() => () => {
+    if (url) URL.revokeObjectURL(url);
+  }, [url]);
+
+  return url;
+}
 
 export default function ImagesPage() {
   const params = useParams<{ id: string }>();
   const router = useRouter();
-  const [previews, setPreviews] = useState<{ Front?: string; Back?: string }>({});
+  const [localPreviews, setLocalPreviews] = useState<{ Front?: string; Back?: string }>({});
 
   const { data, refetch } = useQuery({
     queryKey: ["policy", params.id],
     queryFn: () => api.get<Policy>(`/api/v1/insurance/${params.id}`),
   });
 
+  const frontImage = data?.images.find((i) => i.imageType === "Front");
+  const backImage = data?.images.find((i) => i.imageType === "Back");
+  const frontPreviewFromApi = useImagePreview(params.id, frontImage?.id);
+  const backPreviewFromApi = useImagePreview(params.id, backImage?.id);
+
   async function upload(type: "Front" | "Back", file: File) {
     const form = new FormData();
     form.append("imageType", type);
     form.append("file", file);
     try {
-      const updated = await api.upload<Policy>(`/api/v1/insurance/${params.id}/images`, form);
-      setPreviews((p) => ({ ...p, [type]: URL.createObjectURL(file) }));
+      await api.upload<Policy>(`/api/v1/insurance/${params.id}/images`, form);
+      setLocalPreviews((p) => ({ ...p, [type]: URL.createObjectURL(file) }));
       toast.success(type === "Front" ? "تصویر روی گوشی ثبت شد." : "تصویر پشت گوشی ثبت شد.");
       await refetch();
-      return updated;
     } catch (error) {
       notifyError(error);
       throw error;
     }
   }
 
-  const hasFront = Boolean(data?.images.some((i) => i.imageType === "Front") || previews.Front);
-  const hasBack = Boolean(data?.images.some((i) => i.imageType === "Back") || previews.Back);
-  const token = getAccessToken();
+  const hasFront = Boolean(frontImage || localPreviews.Front);
+  const hasBack = Boolean(backImage || localPreviews.Back);
 
   return (
     <StoreShell>
@@ -60,12 +80,7 @@ export default function ImagesPage() {
         </Alert>
         <CameraCapture
           label="تصویر روی گوشی"
-          previewUrl={
-            previews.Front ??
-            (data?.images.find((i) => i.imageType === "Front")
-              ? `${API_URL}/api/v1/insurance/${params.id}/images/${data.images.find((i) => i.imageType === "Front")?.id}?access_token=${token}`
-              : null)
-          }
+          previewUrl={localPreviews.Front ?? frontPreviewFromApi}
           onCapture={async (file) => {
             await upload("Front", file);
           }}
@@ -73,7 +88,7 @@ export default function ImagesPage() {
         <CameraCapture
           label="تصویر پشت گوشی"
           warning="لطفاً تصویر پشت گوشی را بدون قاب و کیف تهیه کنید."
-          previewUrl={previews.Back ?? null}
+          previewUrl={localPreviews.Back ?? backPreviewFromApi}
           onCapture={async (file) => {
             await upload("Back", file);
           }}

@@ -3,6 +3,7 @@
 import { useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { FieldDescription } from "@/components/ui/field";
+import { compressImageFile } from "@/lib/image-compress";
 
 type Props = {
   label: string;
@@ -50,12 +51,13 @@ export function CameraCapture({ label, warning, onCapture, previewUrl }: Props) 
       if (!blob) return;
       setPending(true);
       try {
-        await onCapture(new File([blob], "capture.jpg", { type: "image/jpeg" }));
+        const file = await compressImageFile(new File([blob], "capture.jpg", { type: "image/jpeg" }));
+        await onCapture(file);
         stopCamera();
       } finally {
         setPending(false);
       }
-    }, "image/jpeg", 0.85);
+    }, "image/jpeg", 0.82);
   }
 
   async function onFile(event: React.ChangeEvent<HTMLInputElement>) {
@@ -63,7 +65,7 @@ export function CameraCapture({ label, warning, onCapture, previewUrl }: Props) 
     if (!file) return;
     setPending(true);
     try {
-      await onCapture(file);
+      await onCapture(await compressImageFile(file));
     } finally {
       setPending(false);
     }
@@ -98,7 +100,7 @@ export function CameraCapture({ label, warning, onCapture, previewUrl }: Props) 
         </Button>
         <input ref={fileRef} type="file" accept="image/jpeg,image/png,image/webp" className="hidden" onChange={onFile} />
       </div>
-      <FieldDescription>فرمت مجاز: JPG، PNG، WEBP — حداکثر ۵ مگابایت</FieldDescription>
+      <FieldDescription>فرمت مجاز: JPG، PNG، WEBP — قبل از ارسال، حجم تصویر به‌صورت خودکار کم می‌شود.</FieldDescription>
     </div>
   );
 }
