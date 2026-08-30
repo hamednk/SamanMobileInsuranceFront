@@ -16,7 +16,7 @@ import { Empty, EmptyHeader, EmptyTitle } from "@/components/ui/empty";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { PolicyImagesButton } from "@/features/insurance/policy-images-dialog";
 import { api, notifyError } from "@/lib/api";
-import { formatToman, policyStatusLabel, statusLabel, toFaDigits } from "@/lib/format";
+import { formatToman, paymentStatusLabel, policyStatusLabel, statusLabel, toFaDigits } from "@/lib/format";
 
 export default function AdminPoliciesPage() {
   const [page, setPage] = useState(1);
