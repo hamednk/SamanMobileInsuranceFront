@@ -5,6 +5,7 @@ import { KeyRoundIcon } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 import { AdminShell } from "@/components/admin-shell";
+import { DataPagination } from "@/components/data-pagination";
 import { SearchField } from "@/components/search-field";
 import { Button } from "@/components/ui/button";
 import {
@@ -26,14 +27,15 @@ type UserRow = { id: string; username: string; role: string; isActive: boolean; 
 export default function AdminUsersPage() {
   const client = useQueryClient();
   const [search, setSearch] = useState("");
+  const [page, setPage] = useState(1);
   const [selected, setSelected] = useState<UserRow | null>(null);
   const [password, setPassword] = useState("");
   const [confirm, setConfirm] = useState("");
 
   const { data } = useQuery({
-    queryKey: ["admin-users", search],
+    queryKey: ["admin-users", search, page],
     queryFn: () =>
-      api.getPaged<UserRow[]>(`/api/v1/admin/users?page=1&pageSize=20&search=${encodeURIComponent(search)}`),
+      api.getPaged<UserRow[]>(`/api/v1/admin/users?page=${page}&pageSize=20&search=${encodeURIComponent(search)}`),
   });
 
   const setPasswordMutation = useMutation({
@@ -59,7 +61,14 @@ export default function AdminUsersPage() {
           <h1 className="text-2xl font-semibold">کاربران</h1>
           <p className="mt-1 text-sm text-muted-foreground">مدیریت کاربران و تغییر رمز عبور</p>
         </div>
-        <SearchField value={search} onChange={setSearch} placeholder="جستجو نام کاربری یا نقش..." />
+        <SearchField
+          value={search}
+          onChange={(value) => {
+            setSearch(value);
+            setPage(1);
+          }}
+          placeholder="جستجو نام کاربری یا نقش..."
+        />
         <div className="overflow-x-auto rounded-xl border border-primary/10 bg-card/80 shadow-sm backdrop-blur">
           <Table>
             <TableHeader>
@@ -98,6 +107,7 @@ export default function AdminUsersPage() {
             </TableBody>
           </Table>
         </div>
+        <DataPagination pagination={data?.pagination} onPageChange={setPage} />
       </div>
 
       <Dialog

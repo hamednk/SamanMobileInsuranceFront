@@ -33,6 +33,7 @@ export default function AdminStoreDetailPage() {
     onSuccess: () => {
       toast.success("وضعیت فروشگاه به‌روز شد.");
       client.invalidateQueries({ queryKey: ["admin-store", params.id] });
+      client.invalidateQueries({ queryKey: ["admin-stores"] });
     },
     onError: notifyError,
   });
@@ -73,8 +74,10 @@ export default function AdminStoreDetailPage() {
                 </AlertDialogDescription>
               </AlertDialogHeader>
               <AlertDialogFooter>
-                <AlertDialogCancel>انصراف</AlertDialogCancel>
-                <AlertDialogAction onClick={() => toggle.mutate(!data.isActive)}>تأیید</AlertDialogAction>
+                <AlertDialogCancel disabled={toggle.isPending}>انصراف</AlertDialogCancel>
+                <AlertDialogAction disabled={toggle.isPending} onClick={() => toggle.mutate(!data.isActive)}>
+                  {toggle.isPending ? "در حال ذخیره..." : "تأیید"}
+                </AlertDialogAction>
               </AlertDialogFooter>
             </AlertDialogContent>
           </AlertDialog>

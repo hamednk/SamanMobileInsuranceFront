@@ -3,34 +3,41 @@
 import { useQuery } from "@tanstack/react-query";
 import { useState } from "react";
 import { AdminShell } from "@/components/admin-shell";
-import { JalaliDatePicker } from "@/components/jalali-date-picker";
-import { SearchField } from "@/components/search-field";
+import { DataPagination } from "@/components/data-pagination";
+import {
+  buildPolicyQuery,
+  emptyPolicyFilters,
+  PolicyFiltersForm,
+  type PolicyFilterValues,
+} from "@/components/policy-filters-form";
 import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { api, notifyError } from "@/lib/api";
 import { formatToman, statusLabel, toFaDigits } from "@/lib/format";
 
 export default function InsuranceReportPage() {
-  const [fromDate, setFrom] = useState("");
-  const [toDate, setTo] = useState("");
-  const [search, setSearch] = useState("");
-  const qs = new URLSearchParams({ page: "1", pageSize: "20" });
-  if (fromDate) qs.set("fromDate", fromDate);
-  if (toDate) qs.set("toDate", toDate);
-  if (search) qs.set("search", search);
-  const { data, refetch } = useQuery({
-    queryKey: ["ins-report", fromDate, toDate, search],
-    queryFn: () => api.getPaged<Record<string, unknown>[]>(`/api/v1/admin/reports/insurance?${qs.toString()}`),
+  const [page, setPage] = useState(1);
+  const [filters, setFilters] = useState<PolicyFilterValues>(emptyPolicyFilters);
+  const [appliedFilters, setAppliedFilters] = useState<PolicyFilterValues>(emptyPolicyFilters);
+
+  const { data } = useQuery({
+    queryKey: ["ins-report", appliedFilters, page],
+    queryFn: () =>
+      api.getPaged<Record<string, unknown>[]>(
+        `/api/v1/admin/reports/insurance?${buildPolicyQuery(appliedFilters, page).toString()}`
+      ),
   });
 
   async function exportExcel() {
     try {
-      const blob = await api.blob(`/api/v1/admin/reports/insurance/export?${qs.toString()}`);
+      const qs = buildPolicyQuery(appliedFilters, 1).toString();
+      const blob = await api.blob(`/api/v1/admin/reports/insurance/export?${qs}`);
       const url = URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = "insurance-report.xlsx";
-      a.click();
+      const anchor = document.createElement("a");
+      anchor.href = url;
+      anchor.download = "insurance-report.xlsx";
+      anchor.click();
+      URL.revokeObjectURL(url);
     } catch (error) {
       notifyError(error);
     }
@@ -44,25 +51,22 @@ export default function InsuranceReportPage() {
           خروجی اکسل
         </Button>
       </div>
-      <form
-        className="mb-4 flex flex-wrap items-end gap-2"
-        onSubmit={(e) => {
-          e.preventDefault();
-          refetch();
+
+      <PolicyFiltersForm
+        filters={filters}
+        onChange={setFilters}
+        onApply={() => {
+          setPage(1);
+          setAppliedFilters(filters);
         }}
-      >
-        <div className="w-44">
-          <JalaliDatePicker value={fromDate} onChange={setFrom} placeholder="از تاریخ" />
-        </div>
-        <div className="w-44">
-          <JalaliDatePicker value={toDate} onChange={setTo} placeholder="تا تاریخ" />
-        </div>
-        <SearchField value={search} onChange={setSearch} placeholder="جستجو در گزارش..." className="max-w-xs" />
-        <Button type="submit" className="min-h-11">
-          اعمال فیلتر
-        </Button>
-      </form>
-      <div className="overflow-x-auto rounded-xl border border-primary/10 bg-card/80 shadow-sm backdrop-blur">
+        onReset={() => {
+          setFilters(emptyPolicyFilters);
+          setAppliedFilters(emptyPolicyFilters);
+          setPage(1);
+        }}
+      />
+
+      <div className="mt-4 overflow-x-auto rounded-xl border border-primary/10 bg-card/80 shadow-sm backdrop-blur">
         <Table>
           <TableHeader>
             <TableRow>
@@ -70,26 +74,31 @@ export default function InsuranceReportPage() {
               <TableHead>فروشگاه</TableHead>
               <TableHead>بیمه‌گذار</TableHead>
               <TableHead>IMEI</TableHead>
+              <TableHead>نوع</TableHead>
               <TableHead>حق بیمه</TableHead>
               <TableHead>وضعیت</TableHead>
+              <TableHead>پرداخت</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
-            {(data?.data ?? []).map((p, i) => (
-              <TableRow key={String(p.policyNumber ?? i)}>
+            {(data?.data ?? []).map((p, index) => (
+              <TableRow key={String(p.policyNumber ?? index)}>
                 <TableCell>{toFaDigits(String(p.policyNumber ?? "—"))}</TableCell>
                 <TableCell>{String(p.storeName ?? "")}</TableCell>
                 <TableCell>
                   {String(p.customerFirstName ?? "")} {String(p.customerLastName ?? "")}
                 </TableCell>
                 <TableCell>{toFaDigits(String(p.imei1 ?? ""))}</TableCell>
+                <TableCell>{statusLabel(String(p.insuranceType ?? ""))}</TableCell>
                 <TableCell>{formatToman(Number(p.premiumRial ?? 0))}</TableCell>
                 <TableCell>{statusLabel(String(p.status ?? ""))}</TableCell>
+                <TableCell>{statusLabel(String(p.paymentStatus ?? ""))}</TableCell>
               </TableRow>
             ))}
           </TableBody>
         </Table>
       </div>
+      <DataPagination pagination={data?.pagination} onPageChange={setPage} />
     </AdminShell>
   );
 }

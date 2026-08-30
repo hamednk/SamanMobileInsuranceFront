@@ -6,6 +6,7 @@ import { useMemo, useState } from "react";
 import { ArrowLeftIcon, CircleAlertIcon } from "lucide-react";
 import { SearchField } from "@/components/search-field";
 import { StoreShell } from "@/components/store-shell";
+import { DataPagination } from "@/components/data-pagination";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Empty, EmptyDescription, EmptyHeader, EmptyTitle } from "@/components/ui/empty";
@@ -22,10 +23,13 @@ import type { PolicyListItem } from "@/types";
 
 export default function PoliciesPage() {
   const [search, setSearch] = useState("");
+  const [page, setPage] = useState(1);
   const { data } = useQuery({
-    queryKey: ["policies", search],
+    queryKey: ["policies", search, page],
     queryFn: () =>
-      api.getPaged<PolicyListItem[]>(`/api/v1/insurance/mine?page=1&pageSize=50&search=${encodeURIComponent(search)}`),
+      api.getPaged<PolicyListItem[]>(
+        `/api/v1/insurance/mine?page=${page}&pageSize=20&search=${encodeURIComponent(search)}`
+      ),
   });
 
   const items = data?.data ?? [];
@@ -82,7 +86,14 @@ export default function PoliciesPage() {
           </section>
         ) : null}
 
-        <SearchField value={search} onChange={setSearch} placeholder="جستجو بر اساس نام، کد ملی، IMEI یا شماره بیمه‌نامه" />
+        <SearchField
+          value={search}
+          onChange={(value) => {
+            setSearch(value);
+            setPage(1);
+          }}
+          placeholder="جستجو بر اساس نام، کد ملی، IMEI یا شماره بیمه‌نامه"
+        />
 
         {items.length === 0 ? (
           <Empty>
@@ -92,57 +103,60 @@ export default function PoliciesPage() {
             </EmptyHeader>
           </Empty>
         ) : (
-          <div className="overflow-x-auto rounded-xl border border-primary/10 bg-card/80 shadow-sm backdrop-blur">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>شماره</TableHead>
-                  <TableHead>بیمه‌گذار</TableHead>
-                  <TableHead>موبایل</TableHead>
-                  <TableHead>مبلغ</TableHead>
-                  <TableHead>وضعیت</TableHead>
-                  <TableHead>تاریخ</TableHead>
-                  <TableHead>عملیات</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {items.map((p) => {
-                  const href = getPolicyContinueHref(p.id, p.status);
-                  return (
-                    <TableRow key={p.id}>
-                      <TableCell>
-                        <Link href={`/insurance/${p.id}`} className="text-primary">
-                          {toFaDigits(p.policyNumber ?? "موقت")}
-                        </Link>
-                      </TableCell>
-                      <TableCell>{p.customerName}</TableCell>
-                      <TableCell>
-                        {p.brandName} {p.modelName}
-                      </TableCell>
-                      <TableCell>{formatToman(p.premiumRial)}</TableCell>
-                      <TableCell>
-                        <Badge variant={isIncompletePolicy(p.status) ? "outline" : "secondary"}>
-                          {statusLabel(p.status)}
-                        </Badge>
-                      </TableCell>
-                      <TableCell>{formatJalali(p.createdAt)}</TableCell>
-                      <TableCell>
-                        {href ? (
-                          <Button size="sm" className="min-h-10" render={<Link href={href} />}>
-                            {getPolicyContinueLabel(p.status)}
-                          </Button>
-                        ) : (
-                          <Button size="sm" variant="outline" className="min-h-10" render={<Link href={`/insurance/${p.id}`} />}>
-                            مشاهده
-                          </Button>
-                        )}
-                      </TableCell>
-                    </TableRow>
-                  );
-                })}
-              </TableBody>
-            </Table>
-          </div>
+          <>
+            <div className="overflow-x-auto rounded-xl border border-primary/10 bg-card/80 shadow-sm backdrop-blur">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>شماره</TableHead>
+                    <TableHead>بیمه‌گذار</TableHead>
+                    <TableHead>موبایل</TableHead>
+                    <TableHead>مبلغ</TableHead>
+                    <TableHead>وضعیت</TableHead>
+                    <TableHead>تاریخ</TableHead>
+                    <TableHead>عملیات</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {items.map((p) => {
+                    const href = getPolicyContinueHref(p.id, p.status);
+                    return (
+                      <TableRow key={p.id}>
+                        <TableCell>
+                          <Link href={`/insurance/${p.id}`} className="text-primary">
+                            {toFaDigits(p.policyNumber ?? "موقت")}
+                          </Link>
+                        </TableCell>
+                        <TableCell>{p.customerName}</TableCell>
+                        <TableCell>
+                          {p.brandName} {p.modelName}
+                        </TableCell>
+                        <TableCell>{formatToman(p.premiumRial)}</TableCell>
+                        <TableCell>
+                          <Badge variant={isIncompletePolicy(p.status) ? "outline" : "secondary"}>
+                            {statusLabel(p.status)}
+                          </Badge>
+                        </TableCell>
+                        <TableCell>{formatJalali(p.createdAt)}</TableCell>
+                        <TableCell>
+                          {href ? (
+                            <Button size="sm" className="min-h-10" render={<Link href={href} />}>
+                              {getPolicyContinueLabel(p.status)}
+                            </Button>
+                          ) : (
+                            <Button size="sm" variant="outline" className="min-h-10" render={<Link href={`/insurance/${p.id}`} />}>
+                              مشاهده
+                            </Button>
+                          )}
+                        </TableCell>
+                      </TableRow>
+                    );
+                  })}
+                </TableBody>
+              </Table>
+            </div>
+            <DataPagination pagination={data?.pagination} onPageChange={setPage} />
+          </>
         )}
       </div>
     </StoreShell>
