@@ -50,7 +50,8 @@ export type StoreProfile = {
 export type StoreDashboard = {
   todayPolicies: number;
   monthPolicies: number;
-  totalSalesRial: number;
+  totalPremiumRial: number;
+  storeProfitRial: number;
   awaitingPayment: number;
   issued: number;
 };
@@ -134,6 +135,7 @@ export type AdminDashboard = {
   todayPolicies: number;
   monthPolicies: number;
   totalPremiumRial: number;
+  totalStoreProfitRial: number;
   newPhones: number;
   usedPhones: number;
   successfulPayments: number;

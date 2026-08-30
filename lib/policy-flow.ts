@@ -1,7 +1,7 @@
-export type IncompletePolicyStatus = "Draft" | "AwaitingImages" | "AwaitingPayment" | "Paid";
+export type IncompletePolicyStatus = "Draft" | "AwaitingImages" | "AwaitingPayment";
 
 export function isIncompletePolicy(status: string): boolean {
-  return status === "Draft" || status === "AwaitingImages" || status === "AwaitingPayment" || status === "Paid";
+  return status === "Draft" || status === "AwaitingImages" || status === "AwaitingPayment";
 }
 
 /** Next wizard step URL for an incomplete policy. */
@@ -12,8 +12,6 @@ export function getPolicyContinueHref(policyId: string, status: string): string 
       return `/insurance/${policyId}/images`;
     case "AwaitingPayment":
       return `/insurance/${policyId}/payment`;
-    case "Paid":
-      return `/insurance/${policyId}/success`;
     default:
       return null;
   }
@@ -26,8 +24,6 @@ export function getPolicyContinueLabel(status: string): string {
       return "تکمیل تصاویر";
     case "AwaitingPayment":
       return "ادامه پرداخت";
-    case "Paid":
-      return "مشاهده صدور";
     default:
       return "ادامه";
   }
@@ -40,8 +36,6 @@ export function getPolicyContinueHint(status: string): string {
       return "ثبت تصاویر روی و پشت گوشی باقی مانده است.";
     case "AwaitingPayment":
       return "پرداخت حق بیمه انجام نشده است.";
-    case "Paid":
-      return "پرداخت انجام شده؛ وضعیت صدور را بررسی کنید.";
     default:
       return "این بیمه‌نامه ناقص است و باید تکمیل شود.";
   }

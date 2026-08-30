@@ -10,6 +10,7 @@ export default function StoreModelsPage() {
         brandsPath={"/api/v1/store/catalog/brands"}
         modelsPath={"/api/v1/store/catalog/models"}
         queryPrefix="store"
+        restrictManage
       />
     </StoreShell>
   );

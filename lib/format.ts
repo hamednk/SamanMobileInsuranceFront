@@ -64,6 +64,18 @@ export function formatJalali(iso: string | Date): string {
   }).format(date);
 }
 
+export function formatJalaliDateTime(iso: string | Date): string {
+  const date = typeof iso === "string" ? new Date(iso) : iso;
+  return new Intl.DateTimeFormat("fa-IR-u-ca-persian", {
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+    timeZone: "Asia/Tehran",
+  }).format(date);
+}
+
 const TYPE_LABELS: Record<string, string> = {
   // Policy / payment
   Draft: "پیش‌نویس",
@@ -122,6 +134,17 @@ const TYPE_LABELS: Record<string, string> = {
 export function typeLabel(value: string | null | undefined): string {
   if (!value) return "—";
   return TYPE_LABELS[value] ?? TYPE_LABELS[value.trim()] ?? value;
+}
+
+/** Policy workflow status (Paid = registered, awaiting company issuance). */
+export function policyStatusLabel(status: string): string {
+  if (status === "Paid") return "ثبت‌شده";
+  return typeLabel(status);
+}
+
+/** Gateway / payment record status. */
+export function paymentStatusLabel(status: string): string {
+  return typeLabel(status);
 }
 
 /** @deprecated Prefer typeLabel — kept for existing imports. */

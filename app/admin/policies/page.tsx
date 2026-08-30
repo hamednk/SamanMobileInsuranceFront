@@ -16,7 +16,7 @@ import { Empty, EmptyHeader, EmptyTitle } from "@/components/ui/empty";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { PolicyImagesButton } from "@/features/insurance/policy-images-dialog";
 import { api, notifyError } from "@/lib/api";
-import { formatToman, statusLabel, toFaDigits } from "@/lib/format";
+import { formatToman, policyStatusLabel, statusLabel, toFaDigits } from "@/lib/format";
 
 export default function AdminPoliciesPage() {
   const [page, setPage] = useState(1);
@@ -112,8 +112,8 @@ export default function AdminPoliciesPage() {
                       <TableCell>{toFaDigits(String(p.imei1 ?? ""))}</TableCell>
                       <TableCell>{statusLabel(String(p.insuranceType ?? ""))}</TableCell>
                       <TableCell>{formatToman(Number(p.premiumRial ?? 0))}</TableCell>
-                      <TableCell>{statusLabel(String(p.status ?? ""))}</TableCell>
-                      <TableCell>{statusLabel(String(p.paymentStatus ?? ""))}</TableCell>
+                      <TableCell>{policyStatusLabel(String(p.status ?? ""))}</TableCell>
+                      <TableCell>{paymentStatusLabel(String(p.paymentStatus ?? ""))}</TableCell>
                       <TableCell className="min-w-52">
                         {id ? (
                           <div className="flex flex-wrap items-center gap-2 whitespace-nowrap">

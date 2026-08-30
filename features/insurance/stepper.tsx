@@ -1,6 +1,6 @@
 import { cn } from "@/lib/utils";
 
-const steps = ["اطلاعات بیمه", "تصاویر موبایل", "پرداخت", "صدور بیمه‌نامه"];
+const steps = ["اطلاعات بیمه", "تصاویر موبایل", "پرداخت", "ثبت بیمه‌نامه"];
 
 export function WizardStepper({ current }: { current: 1 | 2 | 3 | 4 }) {
   return (

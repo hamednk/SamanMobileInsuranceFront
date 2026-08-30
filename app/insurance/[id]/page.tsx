@@ -22,7 +22,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { api } from "@/lib/api";
-import { formatJalali, formatToman, statusLabel } from "@/lib/format";
+import { formatJalali, formatToman, paymentStatusLabel, policyStatusLabel, statusLabel } from "@/lib/format";
 import {
   getPolicyContinueHint,
   getPolicyContinueHref,
@@ -33,8 +33,8 @@ import { cn } from "@/lib/utils";
 import type { Policy } from "@/types";
 
 function statusTone(status: string) {
-  if (status === "Issued") return "bg-emerald-500/15 text-emerald-700 border-emerald-500/30 dark:text-emerald-300";
-  if (status === "AwaitingPayment" || status === "Paid") return "bg-sky-500/15 text-sky-700 border-sky-500/30 dark:text-sky-300";
+  if (status === "Issued" || status === "Paid") return "bg-emerald-500/15 text-emerald-700 border-emerald-500/30 dark:text-emerald-300";
+  if (status === "AwaitingPayment") return "bg-sky-500/15 text-sky-700 border-sky-500/30 dark:text-sky-300";
   if (status === "AwaitingImages" || status === "Draft") return "bg-amber-500/15 text-amber-800 border-amber-500/30 dark:text-amber-200";
   if (status === "Cancelled" || status === "Failed") return "bg-rose-500/15 text-rose-700 border-rose-500/30 dark:text-rose-300";
   return "";
@@ -65,13 +65,13 @@ export default function PolicyDetailPage() {
     <StoreShell>
       <div className="mx-auto flex w-full max-w-3xl flex-col gap-4">
         <DetailHero
-          tone={incomplete ? "amber" : data.status === "Issued" ? "emerald" : "blue"}
+          tone={incomplete ? "amber" : data.status === "Issued" || data.status === "Paid" ? "emerald" : "blue"}
           eyebrow="جزئیات بیمه‌نامه"
           title={data.policyNumber ? `بیمه‌نامه ${data.policyNumber}` : "بیمه‌نامه موقت"}
           subtitle={`${data.brandName} ${data.modelName} · ${statusLabel(data.insuranceType)}`}
           badge={
             <Badge variant="outline" className={cn("h-6 border px-2.5", statusTone(data.status))}>
-              {statusLabel(data.status)}
+              {policyStatusLabel(data.status)}
             </Badge>
           }
           actions={
@@ -100,29 +100,14 @@ export default function PolicyDetailPage() {
           </div>
         ) : null}
 
-        <div className="grid gap-3 sm:grid-cols-3">
+        <div className="grid gap-3 sm:grid-cols-2">
           <div className="rounded-2xl border border-sky-500/25 bg-gradient-to-br from-sky-500/15 to-transparent p-4">
-            <p className="text-xs text-muted-foreground">حق بیمه (سهم شرکت)</p>
+            <p className="text-xs text-muted-foreground">حق بیمه</p>
             <p className="mt-1 text-lg font-semibold text-sky-800 dark:text-sky-200">{formatToman(data.premiumRial)}</p>
           </div>
-          <div className="rounded-2xl border border-amber-500/25 bg-gradient-to-br from-amber-500/15 to-transparent p-4">
-            <p className="text-xs text-muted-foreground">دریافتی از مشتری</p>
-            <p className="mt-1 text-lg font-semibold">{formatToman(data.customerChargedRial)}</p>
-          </div>
-          <div className="rounded-2xl border border-teal-500/25 bg-gradient-to-br from-teal-500/15 to-transparent p-4">
-            <p className="text-xs text-muted-foreground">سود فروشگاه</p>
-            <p className="mt-1 text-lg font-semibold text-primary">{formatToman(data.storeProfitRial)}</p>
-          </div>
-        </div>
-
-        <div className="grid gap-3 sm:grid-cols-2">
           <div className="rounded-2xl border border-primary/20 bg-gradient-to-br from-primary/10 to-transparent p-4">
             <p className="text-xs text-muted-foreground">وضعیت پرداخت</p>
-            <p className="mt-1 text-lg font-semibold">{statusLabel(data.paymentStatus)}</p>
-          </div>
-          <div className="rounded-2xl border border-indigo-500/25 bg-gradient-to-br from-indigo-500/15 to-transparent p-4">
-            <p className="text-xs text-muted-foreground">تاریخ شروع</p>
-            <p className="mt-1 text-lg font-semibold">{formatJalali(data.startDate)}</p>
+            <p className="mt-1 text-lg font-semibold">{paymentStatusLabel(data.paymentStatus)}</p>
           </div>
         </div>
 
@@ -147,16 +132,14 @@ export default function PolicyDetailPage() {
           <DetailField label="سریال ۱" value={data.imei1} icon={<HashIcon className="size-4" />} mono />
           {data.imei2 ? <DetailField label="سریال ۲" value={data.imei2} icon={<HashIcon className="size-4" />} mono /> : null}
           <DetailField label="قیمت موبایل" value={formatToman(data.mobilePriceRial)} icon={<WalletIcon className="size-4" />} />
-          <DetailField label="حق بیمه (سهم شرکت)" value={formatToman(data.premiumRial)} icon={<CreditCardIcon className="size-4" />} />
-          <DetailField label="دریافتی از مشتری" value={formatToman(data.customerChargedRial)} icon={<WalletIcon className="size-4" />} />
-          <DetailField label="سود فروشگاه" value={formatToman(data.storeProfitRial)} icon={<CreditCardIcon className="size-4" />} />
+          <DetailField label="حق بیمه" value={formatToman(data.premiumRial)} icon={<CreditCardIcon className="size-4" />} />
         </DetailSection>
 
         <DetailSection title="تاریخ‌ها" icon={<CalendarIcon className="size-4" />}>
           <DetailField label="تاریخ شروع" value={formatJalali(data.startDate)} icon={<CalendarIcon className="size-4" />} />
           <DetailField
             label="تاریخ صدور"
-            value={data.issueDate ? formatJalali(data.issueDate) : "هنوز صادر نشده"}
+            value={data.issueDate ? formatJalali(data.issueDate) : data.status === "Paid" ? "تا ۴۸ ساعت کاری آینده صادر می‌شود" : "هنوز صادر نشده"}
             icon={<CalendarIcon className="size-4" />}
           />
           <DetailField label="تاریخ ثبت" value={formatJalali(data.createdAt)} icon={<CalendarIcon className="size-4" />} />

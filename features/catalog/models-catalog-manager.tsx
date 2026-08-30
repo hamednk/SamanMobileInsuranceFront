@@ -11,16 +11,18 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { api, notifyError } from "@/lib/api";
 
 type Brand = { id: string; name: string; isActive: boolean };
-type Model = { id: string; brandId: string; brandName: string; name: string; isActive: boolean };
+type Model = { id: string; brandId: string; brandName: string; name: string; isActive: boolean; canManage?: boolean };
 
 export function ModelsCatalogManager({
   brandsPath,
   modelsPath,
   queryPrefix,
+  restrictManage = false,
 }: {
   brandsPath: string;
   modelsPath: string;
   queryPrefix: string;
+  restrictManage?: boolean;
 }) {
   const client = useQueryClient();
   const [brandId, setBrandId] = useState("");
@@ -92,7 +94,9 @@ export function ModelsCatalogManager({
       <div>
         <h1 className="text-2xl font-semibold">مدل‌های موبایل</h1>
         <p className="mt-1 text-sm text-muted-foreground">
-          افزودن، ویرایش و حذف مدل‌ها — نام تکراری برای یک برند مجاز نیست
+          {restrictManage
+            ? "فقط مدل‌هایی که خودتان ثبت کرده‌اید قابل ویرایش یا حذف هستند."
+            : "افزودن، ویرایش و حذف مدل‌ها — نام تکراری برای یک برند مجاز نیست"}
         </p>
       </div>
       <form
@@ -142,7 +146,9 @@ export function ModelsCatalogManager({
             </TableRow>
           </TableHeader>
           <TableBody>
-            {filtered.map((m) => (
+            {filtered.map((m) => {
+              const canManage = restrictManage ? Boolean(m.canManage) : true;
+              return (
               <TableRow key={m.id}>
                 <TableCell>{m.brandName}</TableCell>
                 <TableCell>
@@ -173,6 +179,7 @@ export function ModelsCatalogManager({
                   )}
                 </TableCell>
                 <TableCell>
+                  {canManage ? (
                   <div className="flex flex-wrap gap-1">
                     {editing?.id === m.id ? (
                       <>
@@ -218,9 +225,13 @@ export function ModelsCatalogManager({
                       </>
                     )}
                   </div>
+                  ) : (
+                    <span className="text-xs text-muted-foreground">قابل ویرایش نیست</span>
+                  )}
                 </TableCell>
               </TableRow>
-            ))}
+              );
+            })}
             {!models.isLoading && filtered.length === 0 ? (
               <TableRow>
                 <TableCell colSpan={4} className="text-center text-muted-foreground">

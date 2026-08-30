@@ -7,6 +7,7 @@ import {
   HourglassIcon,
   ShieldPlusIcon,
   SmartphoneIcon,
+  TrendingUpIcon,
   WalletIcon,
 } from "lucide-react";
 import { StatCard } from "@/components/stat-card";
@@ -25,9 +26,10 @@ export default function DashboardPage() {
   const cards = [
     { title: "بیمه‌های امروز", value: data?.todayPolicies, tone: "sky" as const, icon: <SmartphoneIcon className="size-5" /> },
     { title: "بیمه‌های این ماه", value: data?.monthPolicies, tone: "indigo" as const, icon: <ShieldPlusIcon className="size-5" /> },
-    { title: "مجموع فروش", value: data ? formatToman(data.totalSalesRial) : null, tone: "amber" as const, icon: <WalletIcon className="size-5" /> },
+    { title: "حق بیمه دریافتی", value: data ? formatToman(data.totalPremiumRial) : null, tone: "amber" as const, icon: <WalletIcon className="size-5" /> },
+    { title: "سود فروشگاه", value: data ? formatToman(data.storeProfitRial) : null, tone: "teal" as const, icon: <TrendingUpIcon className="size-5" /> },
     { title: "در انتظار پرداخت", value: data?.awaitingPayment, tone: "orange" as const, icon: <HourglassIcon className="size-5" /> },
-    { title: "صادر شده", value: data?.issued, tone: "emerald" as const, icon: <FileCheckIcon className="size-5" /> },
+    { title: "ثبت / صادر شده", value: data?.issued, tone: "emerald" as const, icon: <FileCheckIcon className="size-5" /> },
   ];
 
   return (
@@ -72,7 +74,7 @@ export default function DashboardPage() {
 
         <StoreFestivalCard />
 
-        <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-5">
+        <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
           {cards.map((card) => (
             <StatCard key={card.title} title={card.title} value={card.value} tone={card.tone} icon={card.icon} loading={isLoading} />
           ))}

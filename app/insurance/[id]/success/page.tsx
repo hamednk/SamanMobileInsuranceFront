@@ -10,7 +10,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { WizardStepper } from "@/features/insurance/stepper";
 import { api } from "@/lib/api";
-import { formatJalali, formatToman, statusLabel, toFaDigits } from "@/lib/format";
+import { formatJalali, formatToman, policyStatusLabel, toFaDigits } from "@/lib/format";
 import type { Policy } from "@/types";
 
 export default function SuccessPage() {
@@ -29,21 +29,25 @@ export default function SuccessPage() {
             <div className="mb-2 flex size-12 items-center justify-center rounded-2xl bg-emerald-500/15 text-emerald-700 dark:text-emerald-300">
               <BadgeCheckIcon className="size-6" />
             </div>
-            <CardTitle>پرداخت با موفقیت انجام شد</CardTitle>
-            <CardDescription>بیمه نامه شما از تاریخ صدور تا 48 ساعت کاری صادر خواهد شد.</CardDescription>
+            <CardTitle>بیمه‌نامه ثبت شد</CardTitle>
+            <CardDescription>
+              پرداخت حق بیمه انجام شد. بیمه‌نامه ظرف ۴۸ ساعت کاری صادر می‌شود.
+            </CardDescription>
           </CardHeader>
           <CardContent className="flex flex-col gap-3 text-sm">
             <div className="flex flex-wrap items-center gap-2">
               <span className="text-muted-foreground">شماره بیمه‌نامه</span>
-              <Badge variant="secondary">{toFaDigits(data?.policyNumber ?? "در حال صدور...")}</Badge>
+              <Badge variant="secondary">
+                {data?.policyNumber ? toFaDigits(data.policyNumber) : "پس از صدور اعلام می‌شود"}
+              </Badge>
             </div>
             <p>
               بیمه‌گذار: {data?.customerFirstName} {data?.customerLastName}
             </p>
             <p>موبایل: {toFaDigits(data?.customerMobile ?? "")}</p>
-            <p>مبلغ: {data ? formatToman(data.premiumRial) : ""}</p>
-            <p>تاریخ صدور: {data?.issueDate ? formatJalali(data.issueDate) : "—"}</p>
-            <p>وضعیت: {data ? statusLabel(data.status) : ""}</p>
+            <p>مبلغ پرداخت‌شده (حق بیمه): {data ? formatToman(data.premiumRial) : ""}</p>
+            <p>تاریخ صدور: {data?.issueDate ? formatJalali(data.issueDate) : "تا ۴۸ ساعت کاری آینده"}</p>
+            <p>وضعیت: {data ? policyStatusLabel(data.status) : ""}</p>
             <div className="mt-2 flex flex-wrap gap-2">
               <Button className="min-h-11" render={<Link href={`/insurance/${params.id}`} />}>
                 <FileTextIcon data-icon="inline-start" />

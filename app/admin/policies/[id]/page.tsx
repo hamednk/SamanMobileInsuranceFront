@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { PolicyImagesButton } from "@/features/insurance/policy-images-dialog";
 import { api } from "@/lib/api";
-import { formatJalali, formatToman, statusLabel, toFaDigits } from "@/lib/format";
+import { formatJalali, formatToman, policyStatusLabel, toFaDigits } from "@/lib/format";
 import type { Policy } from "@/types";
 
 export default function AdminPolicyDetailPage() {
@@ -30,10 +30,8 @@ export default function AdminPolicyDetailPage() {
         <CardContent className="flex flex-col gap-2 text-sm">
           <p>فروشگاه: {data.storeName}</p>
           <p>بیمه‌گذار: {data.customerFirstName} {data.customerLastName}</p>
-          <p>وضعیت: {statusLabel(data.status)}</p>
-          <p>حق بیمه (سهم شرکت): {formatToman(data.premiumRial)}</p>
-          <p>دریافتی از مشتری: {formatToman(data.customerChargedRial)}</p>
-          <p>سود فروشگاه: {formatToman(data.storeProfitRial)}</p>
+          <p>وضعیت: {policyStatusLabel(data.status)}</p>
+          <p>حق بیمه: {formatToman(data.premiumRial)}</p>
           <p>سریال: {toFaDigits(data.imei1)}</p>
           {data.issueDate ? <p>صدور: {formatJalali(data.issueDate)}</p> : null}
           <Button variant="outline" className="mt-2 min-h-10 w-fit" render={<Link href="/admin/policies" />}>

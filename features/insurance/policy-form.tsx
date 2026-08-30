@@ -195,8 +195,8 @@ export function PolicyForm({ type }: { type: "New" | "Used" }) {
       <Card>
         <CardHeader>
           <CardTitle>{type === "New" ? "ثبت بیمه موبایل آکبند" : "ثبت بیمه موبایل کارکرده"}</CardTitle>
-          <CardDescription>
-            اطلاعات بیمه‌گذار و موبایل را وارد کنید. حق بیمه سهم شرکت است؛ اگر بیشتر بگیرید، مابه‌التفاوت سود فروشگاه می‌شود.
+          <CardDescription className="text-red-500">
+            لطفاً اطلاعات بیمه‌گذار را از روی مدارک شناسایی به‌دقت وارد کنید.
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -340,13 +340,13 @@ export function PolicyForm({ type }: { type: "New" | "Used" }) {
                     }}
                   />
                   <FieldDescription>
-                    سهم شرکت (حق بیمه): {formatToman(quote.data.premiumRial)}. هر مبلغ بیشتر از این، سود فروشگاه است.
+                    پرداخت درگاه فقط حق بیمه است. مبلغ بیشتر از حق بیمه، سود فروشگاه است و پرداخت نمی‌شود.
                   </FieldDescription>
                   {chargedAmount > 0 && chargedAmount < premiumAmount ? (
                     <p className="text-sm text-destructive">مبلغ دریافتی نمی‌تواند کمتر از حق بیمه باشد.</p>
                   ) : null}
                   {chargedAmount >= premiumAmount ? (
-                    <FieldDescription>سود فروشگاه: {formatToman(storeProfit)}</FieldDescription>
+                    <FieldDescription>سود فروشگاه (فقط نمایش): {formatToman(storeProfit)}</FieldDescription>
                   ) : null}
                 </Field>
               ) : null}

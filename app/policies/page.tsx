@@ -18,7 +18,7 @@ import { Empty, EmptyDescription, EmptyHeader, EmptyTitle } from "@/components/u
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { PolicyImagesButton } from "@/features/insurance/policy-images-dialog";
 import { api, notifyError } from "@/lib/api";
-import { formatJalali, formatToman, statusLabel, toFaDigits } from "@/lib/format";
+import { formatJalali, formatToman, policyStatusLabel, toFaDigits } from "@/lib/format";
 import {
   getPolicyContinueHint,
   getPolicyContinueHref,
@@ -87,7 +87,7 @@ export default function PoliciesPage() {
                     <div className="flex min-w-0 flex-col gap-1">
                       <div className="flex flex-wrap items-center gap-2">
                         <span className="font-medium">{p.customerName}</span>
-                        <Badge variant="secondary">{statusLabel(p.status)}</Badge>
+                        <Badge variant="secondary">{policyStatusLabel(p.status)}</Badge>
                       </div>
                       <p className="text-xs text-muted-foreground">
                         {p.brandName} {p.modelName} · {toFaDigits(p.policyNumber ?? "شماره موقت")} ·{" "}
@@ -166,7 +166,7 @@ export default function PoliciesPage() {
                         <TableCell className="font-medium text-primary">{formatToman(p.storeProfitRial)}</TableCell>
                         <TableCell>
                           <Badge variant={isIncompletePolicy(p.status) ? "outline" : "secondary"}>
-                            {statusLabel(p.status)}
+                            {policyStatusLabel(p.status)}
                           </Badge>
                         </TableCell>
                         <TableCell>{formatJalali(p.createdAt)}</TableCell>

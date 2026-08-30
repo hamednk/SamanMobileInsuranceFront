@@ -12,7 +12,7 @@ import { Button } from "@/components/ui/button";
 import { Empty, EmptyDescription, EmptyHeader, EmptyTitle } from "@/components/ui/empty";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { api, notifyError } from "@/lib/api";
-import { formatJalali, formatToman, statusLabel, toFaDigits } from "@/lib/format";
+import { formatJalali, formatToman, policyStatusLabel, toFaDigits } from "@/lib/format";
 import type { Policy, RenewalListItem } from "@/types";
 import { cn } from "@/lib/utils";
 
@@ -117,7 +117,7 @@ export default function RenewalsPage() {
                     <TableCell>{formatToman(p.premiumRial)}</TableCell>
                     <TableCell>
                       <Badge variant={track === "expired" ? "outline" : "secondary"}>
-                        {track === "expired" ? "منقضی‌شده" : statusLabel(p.status)}
+                        {track === "expired" ? "منقضی‌شده" : policyStatusLabel(p.status)}
                       </Badge>
                     </TableCell>
                     <TableCell>{p.endDate ? formatJalali(p.endDate) : "—"}</TableCell>

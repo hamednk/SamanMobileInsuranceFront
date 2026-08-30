@@ -4,7 +4,6 @@ import { useQuery } from "@tanstack/react-query";
 import {
   BadgeCheckIcon,
   Building2Icon,
-  ChartColumnIcon,
   FileSpreadsheetIcon,
   RefreshCwIcon,
   ShieldIcon,
@@ -34,7 +33,6 @@ type PerformanceReport = {
   customerReceivedRial: number;
   companyRemittanceRial: number;
   totalMobilePriceRial: number;
-  averagePremiumRial: number;
   storeProfitRial: number;
   daily: { date: string; count: number; premiumRial: number }[];
   topBrands: { brand: string; count: number; premiumRial: number }[];
@@ -133,7 +131,7 @@ export default function StorePerformancePage() {
             loading={isLoading}
           />
           <StatCard
-            title="واریز به شرکت (سهم بیمه)"
+            title="حق بیمه دریافتی"
             value={data ? formatToman(data.companyRemittanceRial) : null}
             tone="orange"
             icon={<Building2Icon className="size-5" />}
@@ -165,7 +163,7 @@ export default function StorePerformancePage() {
               <p className="mt-2 text-lg font-semibold">{data ? formatToman(data.customerReceivedRial) : "—"}</p>
             </div>
             <div className="rounded-xl border bg-background/70 p-4">
-              <p className="text-xs text-muted-foreground">مبلغ واریزی به شرکت (حق بیمه)</p>
+              <p className="text-xs text-muted-foreground">حق بیمه دریافتی</p>
               <p className="mt-2 text-lg font-semibold">{data ? formatToman(data.companyRemittanceRial) : "—"}</p>
             </div>
             <div className="rounded-xl border bg-background/70 p-4">
@@ -182,7 +180,7 @@ export default function StorePerformancePage() {
           </CardContent>
         </Card>
 
-        <div className="grid gap-4 md:grid-cols-3">
+        <div className="grid gap-4 md:grid-cols-2">
           <div className="rounded-xl border bg-card/80 p-4">
             <p className="text-xs text-muted-foreground">ارزش موبایل‌های بیمه‌شده</p>
             <p className="mt-2 text-lg font-semibold">{data ? formatToman(data.totalMobilePriceRial) : "—"}</p>
@@ -190,13 +188,6 @@ export default function StorePerformancePage() {
           <div className="rounded-xl border bg-card/80 p-4">
             <p className="text-xs text-muted-foreground">کل پرونده‌های ثبت‌شده در بازه</p>
             <p className="mt-2 text-lg font-semibold">{data ? toFaDigits(data.totalPoliciesInRange) : "—"}</p>
-          </div>
-          <div className="rounded-xl border bg-card/80 p-4">
-            <p className="text-xs text-muted-foreground">میانگین حق بیمه</p>
-            <p className="mt-2 text-lg font-semibold flex items-center gap-2">
-              <ChartColumnIcon className="size-4 text-muted-foreground" />
-              {data ? formatToman(data.averagePremiumRial) : "—"}
-            </p>
           </div>
         </div>
 
