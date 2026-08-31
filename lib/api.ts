@@ -2,7 +2,7 @@ import { toast } from "sonner";
 import { clearSession, getAccessToken, getRefreshToken, setSession } from "@/lib/session";
 import type { ApiResponse, AuthTokens } from "@/types";
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:5290";
+const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "https://api.samanmobile1195.ir";
 
 class ApiError extends Error {
   constructor(
