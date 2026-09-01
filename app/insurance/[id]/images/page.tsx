@@ -5,7 +5,6 @@ import { useParams, useRouter } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 import { StoreShell } from "@/components/store-shell";
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { CameraCapture } from "@/features/insurance/camera-capture";
 import { WizardStepper } from "@/features/insurance/stepper";
@@ -68,16 +67,16 @@ export default function ImagesPage() {
     <StoreShell>
       <div className="mx-auto flex max-w-3xl flex-col gap-6">
         <WizardStepper current={2} />
-        <Alert>
-          <AlertTitle>سریال ثبت‌شده</AlertTitle>
-          <AlertDescription>
+        <div className="rounded-xl border p-4">
+          <h3 className="font-medium">سریال ثبت‌شده</h3>
+          <div className="mt-3 rounded-lg bg-destructive/10 p-3 text-sm text-destructive">
             سریال ۱: {toFaDigits(data?.imei1 ?? "—")} {data?.imei2 ? ` | سریال ۲: ${toFaDigits(data.imei2)}` : ""}
             <br />
-            <span className="text-xs text-red-500">
+            <span className="text-xs">
               هنگام عکس‌برداری، سریال گوشی باید خوانا باشد.
             </span>
-          </AlertDescription>
-        </Alert>
+          </div>
+        </div>
         <CameraCapture
           label="تصویر روی گوشی"
           previewUrl={localPreviews.Front ?? frontPreviewFromApi}
@@ -99,6 +98,13 @@ export default function ImagesPage() {
           onClick={() => router.push(`/insurance/${params.id}/payment`)}
         >
           ادامه و پرداخت
+        </Button>
+        <Button
+          variant="outline"
+          className="min-h-11"
+          onClick={() => router.push(`/insurance/${params.id}/edit`)}
+        >
+          بازگشت و ویرایش اطلاعات
         </Button>
       </div>
     </StoreShell>

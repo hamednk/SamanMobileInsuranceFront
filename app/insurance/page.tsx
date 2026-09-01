@@ -21,7 +21,6 @@ export default function InsuranceTypePage() {
                   <SparklesIcon className="size-5" />
                 </div>
                 <CardTitle>موبایل آکبند</CardTitle>
-                <CardDescription>برای گوشی‌های نو و فعال‌سازی کد همتا</CardDescription>
               </CardHeader>
               <CardContent className="font-medium text-sky-700 dark:text-sky-300">شروع ثبت بیمه‌نامه آکبند</CardContent>
             </Card>
@@ -33,7 +32,6 @@ export default function InsuranceTypePage() {
                   <PackageOpenIcon className="size-5" />
                 </div>
                 <CardTitle>موبایل غیر آکبند (کارکرده)</CardTitle>
-                <CardDescription>تاریخ شروع بیمه‌نامه برابر با امروز است</CardDescription>
               </CardHeader>
               <CardContent className="font-medium text-amber-700 dark:text-amber-300">شروع ثبت بیمه‌نامه کارکرده</CardContent>
             </Card>

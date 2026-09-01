@@ -12,6 +12,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Field, FieldDescription, FieldGroup, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { Spinner } from "@/components/ui/spinner";
+import { DigitLimitedInput } from "@/features/insurance/digit-limited-input";
+import { PersianNameInput } from "@/features/insurance/persian-name-input";
 import { api, notifyError } from "@/lib/api";
 import { toEnDigits } from "@/lib/format";
 import type { CityLookup, LookupItem } from "@/types";
@@ -22,6 +24,12 @@ export function RegisterForm() {
   const [pending, setPending] = useState(false);
   const [captchaRefresh, setCaptchaRefresh] = useState(0);
   const [captcha, setCaptcha] = useState({ captchaId: "", captchaCode: "" });
+  const [managerFirstName, setManagerFirstName] = useState("");
+  const [managerLastName, setManagerLastName] = useState("");
+  const [nationalCode, setNationalCode] = useState("");
+  const [mobile1, setMobile1] = useState("");
+  const [mobile2, setMobile2] = useState("");
+  const [postalCode, setPostalCode] = useState("");
 
   const provinces = useQuery({
     queryKey: ["provinces"],
@@ -43,16 +51,16 @@ export function RegisterForm() {
     try {
       await api.post("/api/v1/stores/register", {
         storeName: form.get("storeName"),
-        managerFirstName: form.get("managerFirstName"),
-        managerLastName: form.get("managerLastName"),
-        nationalCode: toEnDigits(String(form.get("nationalCode") ?? "")),
+        managerFirstName: managerFirstName.trim(),
+        managerLastName: managerLastName.trim(),
+        nationalCode: toEnDigits(nationalCode),
         birthDate: form.get("birthDate"),
-        mobile1: toEnDigits(String(form.get("mobile1") ?? "")),
-        mobile2: toEnDigits(String(form.get("mobile2") ?? "")) || null,
+        mobile1: toEnDigits(mobile1),
+        mobile2: toEnDigits(mobile2) || null,
         provinceId,
         cityId: form.get("cityId"),
         address: form.get("address"),
-        postalCode: toEnDigits(String(form.get("postalCode") ?? "")),
+        postalCode: toEnDigits(postalCode),
         username: String(form.get("username") ?? "").trim(),
         password: form.get("password"),
         captchaId: captcha.captchaId,
@@ -86,17 +94,36 @@ export function RegisterForm() {
             <div className="grid gap-4 md:grid-cols-2">
               <Field>
                 <FieldLabel htmlFor="managerFirstName">نام مدیر</FieldLabel>
-                <Input id="managerFirstName" name="managerFirstName" required className="min-h-11" />
+                <PersianNameInput
+                  id="managerFirstName"
+                  name="managerFirstName"
+                  required
+                  value={managerFirstName}
+                  onValueChange={setManagerFirstName}
+                />
               </Field>
               <Field>
                 <FieldLabel htmlFor="managerLastName">نام خانوادگی مدیر</FieldLabel>
-                <Input id="managerLastName" name="managerLastName" required className="min-h-11" />
+                <PersianNameInput
+                  id="managerLastName"
+                  name="managerLastName"
+                  required
+                  value={managerLastName}
+                  onValueChange={setManagerLastName}
+                />
               </Field>
             </div>
             <div className="grid gap-4 md:grid-cols-2">
               <Field>
                 <FieldLabel htmlFor="nationalCode">کد ملی</FieldLabel>
-                <Input id="nationalCode" name="nationalCode" inputMode="numeric" required maxLength={10} className="min-h-11" />
+                <DigitLimitedInput
+                  id="nationalCode"
+                  name="nationalCode"
+                  maxDigits={10}
+                  required
+                  value={nationalCode}
+                  onValueChange={setNationalCode}
+                />
               </Field>
                 <Field>
                   <FieldLabel htmlFor="birthDate">تاریخ تولد</FieldLabel>
@@ -106,11 +133,30 @@ export function RegisterForm() {
             <div className="grid gap-4 md:grid-cols-2">
               <Field>
                 <FieldLabel htmlFor="mobile1">شماره موبایل ۱</FieldLabel>
-                <Input id="mobile1" name="mobile1" inputMode="tel" required className="min-h-11" placeholder="09121234567" />
+                <DigitLimitedInput
+                  id="mobile1"
+                  name="mobile1"
+                  maxDigits={11}
+                  required
+                  exactLength={false}
+                  placeholder="09121234567"
+                  value={mobile1}
+                  onValueChange={setMobile1}
+                />
+                <FieldDescription>حداکثر ۱۱ رقم — مثل ۰۹۱۲۱۲۳۴۵۶۷</FieldDescription>
               </Field>
               <Field>
                 <FieldLabel htmlFor="mobile2">شماره موبایل ۲</FieldLabel>
-                <Input id="mobile2" name="mobile2" inputMode="tel" className="min-h-11" />
+                <DigitLimitedInput
+                  id="mobile2"
+                  name="mobile2"
+                  maxDigits={11}
+                  exactLength={false}
+                  placeholder="09121234567"
+                  value={mobile2}
+                  onValueChange={setMobile2}
+                />
+                <FieldDescription>اختیاری — حداکثر ۱۱ رقم</FieldDescription>
               </Field>
             </div>
             <div className="grid gap-4 md:grid-cols-2">
@@ -149,7 +195,15 @@ export function RegisterForm() {
             </Field>
             <Field>
               <FieldLabel htmlFor="postalCode">کد پستی</FieldLabel>
-              <Input id="postalCode" name="postalCode" inputMode="numeric" required maxLength={10} className="min-h-11" />
+              <DigitLimitedInput
+                id="postalCode"
+                name="postalCode"
+                maxDigits={10}
+                required
+                value={postalCode}
+                onValueChange={setPostalCode}
+              />
+              <FieldDescription>۱۰ رقم</FieldDescription>
             </Field>
             <div className="grid gap-4 md:grid-cols-2">
               <Field>

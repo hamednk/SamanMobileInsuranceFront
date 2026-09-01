@@ -3,7 +3,7 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { PlusIcon } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { useMemo, useState } from "react";
+import { useMemo, useState, useEffect } from "react";
 import { toast } from "sonner";
 import { JalaliDatePicker } from "@/components/jalali-date-picker";
 import { Button } from "@/components/ui/button";
@@ -21,6 +21,7 @@ import { Input } from "@/components/ui/input";
 import { Spinner } from "@/components/ui/spinner";
 import { WizardStepper } from "@/features/insurance/stepper";
 import { DigitLimitedInput } from "@/features/insurance/digit-limited-input";
+import { PersianNameInput } from "@/features/insurance/persian-name-input";
 import { api, notifyError } from "@/lib/api";
 import { formatAmountInput, formatPercent, formatToman, parseAmountInput, toEnDigits } from "@/lib/format";
 import type { LookupItem, Policy, PremiumQuote } from "@/types";
@@ -30,9 +31,10 @@ const selectClass =
 
 type CreatedModel = { id: string; name: string };
 
-export function PolicyForm({ type }: { type: "New" | "Used" }) {
+export function PolicyForm({ type, policyId }: { type?: "New" | "Used"; policyId?: string }) {
   const router = useRouter();
   const client = useQueryClient();
+  const isEdit = Boolean(policyId);
   const [brandId, setBrandId] = useState("");
   const [modelId, setModelId] = useState("");
   const [priceRial, setPriceRial] = useState("");
@@ -45,6 +47,41 @@ export function PolicyForm({ type }: { type: "New" | "Used" }) {
   const [newModelName, setNewModelName] = useState("");
   const [imei1, setImei1] = useState("");
   const [imei2, setImei2] = useState("");
+  const [firstName, setFirstName] = useState("");
+  const [lastName, setLastName] = useState("");
+  const [nationalCode, setNationalCode] = useState("");
+  const [mobile, setMobile] = useState("");
+  const [postalCode, setPostalCode] = useState("");
+  const [address, setAddress] = useState("");
+
+  const existingPolicy = useQuery({
+    queryKey: ["policy", policyId],
+    queryFn: () => api.get<Policy>(`/api/v1/insurance/${policyId}`),
+    enabled: isEdit,
+  });
+
+  const resolvedType: "New" | "Used" =
+    type ?? (existingPolicy.data?.insuranceType === "New" ? "New" : "Used");
+
+  useEffect(() => {
+    const data = existingPolicy.data;
+    if (!data) return;
+    setBrandId(data.brandId);
+    setModelId(data.modelId);
+    setPriceRial(formatAmountInput(String(data.mobilePriceRial)));
+    setBirthDate(data.customerBirthDate);
+    setStartDate(data.insuranceType === "New" ? data.startDate.slice(0, 16) : "");
+    setChargedRial(formatAmountInput(String(data.customerChargedRial)));
+    setChargedTouched(true);
+    setImei1(toEnDigits(data.imei1));
+    setImei2(data.imei2 ? toEnDigits(data.imei2) : "");
+    setFirstName(data.customerFirstName);
+    setLastName(data.customerLastName);
+    setNationalCode(toEnDigits(data.customerNationalCode));
+    setMobile(toEnDigits(data.customerMobile));
+    setPostalCode(toEnDigits(data.customerPostalCode));
+    setAddress(data.customerAddress);
+  }, [existingPolicy.data]);
 
   const brands = useQuery({
     queryKey: ["brands"],
@@ -57,8 +94,8 @@ export function PolicyForm({ type }: { type: "New" | "Used" }) {
   });
   const numericPrice = parseAmountInput(priceRial);
   const quote = useQuery({
-    queryKey: ["premium", type, numericPrice],
-    queryFn: () => api.post<PremiumQuote>("/api/v1/insurance/premium", { insuranceType: type, mobilePriceRial: numericPrice }),
+    queryKey: ["premium", resolvedType, numericPrice],
+    queryFn: () => api.post<PremiumQuote>("/api/v1/insurance/premium", { insuranceType: resolvedType, mobilePriceRial: numericPrice }),
     enabled: numericPrice > 0,
     retry: false,
   });
@@ -75,10 +112,11 @@ export function PolicyForm({ type }: { type: "New" | "Used" }) {
     imei1En.length > 0 && imei2En.length > 0 && imei1En === imei2En;
   const canCheckImei = imei1En.length === 15 && !duplicateImeiPair;
   const imeiAvailability = useQuery({
-    queryKey: ["imei-available", imei1En, imei2En || null],
+    queryKey: ["imei-available", imei1En, imei2En || null, policyId ?? null],
     queryFn: () => {
       const params = new URLSearchParams({ imei1: imei1En });
       if (imei2En.length > 0) params.set("imei2", imei2En);
+      if (policyId) params.set("excludePolicyId", policyId);
       return api.get<{ available: boolean; message?: string }>(`/api/v1/insurance/imei/available?${params.toString()}`);
     },
     enabled: canCheckImei,
@@ -120,8 +158,8 @@ export function PolicyForm({ type }: { type: "New" | "Used" }) {
     const form = new FormData(event.currentTarget);
     setPending(true);
     try {
-      const startDateValue = type === "New" ? (startDate || null) : null;
-      if (type === "New" && !startDateValue) {
+      const startDateValue = resolvedType === "New" ? (startDate || null) : null;
+      if (resolvedType === "New" && !startDateValue) {
         toast.error("تاریخ شروع بیمه‌نامه را انتخاب کنید.");
         setPending(false);
         return;
@@ -161,16 +199,15 @@ export function PolicyForm({ type }: { type: "New" | "Used" }) {
         setPending(false);
         return;
       }
-      const policy = await api.post<Policy>("/api/v1/insurance", {
-        insuranceType: type,
+      const payload = {
         customer: {
-          firstName: form.get("firstName"),
-          lastName: form.get("lastName"),
-          nationalCode: toEnDigits(String(form.get("nationalCode") ?? "")),
+          firstName: firstName.trim(),
+          lastName: lastName.trim(),
+          nationalCode: toEnDigits(nationalCode),
           birthDate,
-          mobile: toEnDigits(String(form.get("mobile") ?? "")),
-          address: form.get("address"),
-          postalCode: toEnDigits(String(form.get("postalCode") ?? "")),
+          mobile: toEnDigits(mobile),
+          address: address.trim(),
+          postalCode: toEnDigits(postalCode),
         },
         brandId,
         modelId,
@@ -179,6 +216,19 @@ export function PolicyForm({ type }: { type: "New" | "Used" }) {
         imei1: imei1En,
         imei2: imei2En || null,
         startDate: startDateValue,
+      };
+
+      if (isEdit && policyId) {
+        await api.put<Policy>(`/api/v1/insurance/${policyId}/draft`, payload);
+        toast.success("اطلاعات به‌روزرسانی شد.");
+        client.invalidateQueries({ queryKey: ["policy", policyId] });
+        router.push(`/insurance/${policyId}/images`);
+        return;
+      }
+
+      const policy = await api.post<Policy>("/api/v1/insurance", {
+        insuranceType: resolvedType,
+        ...payload,
       });
       toast.success("اطلاعات ذخیره شد.");
       router.push(`/insurance/${policy.id}/images`);
@@ -189,12 +239,30 @@ export function PolicyForm({ type }: { type: "New" | "Used" }) {
     }
   }
 
+  if (isEdit && existingPolicy.isLoading) {
+    return (
+      <div className="mx-auto flex max-w-3xl justify-center p-12">
+        <Spinner className="size-8" />
+      </div>
+    );
+  }
+
+  if (isEdit && !type && !existingPolicy.data) {
+    return <p className="p-6 text-destructive">بیمه‌نامه یافت نشد.</p>;
+  }
+
   return (
     <div className="mx-auto flex max-w-3xl flex-col gap-6">
       <WizardStepper current={1} />
       <Card>
         <CardHeader>
-          <CardTitle>{type === "New" ? "ثبت بیمه موبایل آکبند" : "ثبت بیمه موبایل کارکرده"}</CardTitle>
+          <CardTitle>
+            {isEdit
+              ? "ویرایش اطلاعات بیمه‌نامه"
+              : resolvedType === "New"
+                ? "ثبت بیمه موبایل آکبند"
+                : "ثبت بیمه موبایل کارکرده"}
+          </CardTitle>
           <CardDescription className="text-red-500">
             لطفاً اطلاعات بیمه‌گذار را از روی مدارک شناسایی به‌دقت وارد کنید.
           </CardDescription>
@@ -206,17 +274,37 @@ export function PolicyForm({ type }: { type: "New" | "Used" }) {
               <div className="grid gap-4 md:grid-cols-2">
                 <Field>
                   <FieldLabel htmlFor="firstName">نام</FieldLabel>
-                  <Input id="firstName" name="firstName" required maxLength={80} className="min-h-11" />
+                  <PersianNameInput
+                    id="firstName"
+                    name="firstName"
+                    required
+                    value={firstName}
+                    onValueChange={setFirstName}
+                  />
                 </Field>
                 <Field>
                   <FieldLabel htmlFor="lastName">نام خانوادگی</FieldLabel>
-                  <Input id="lastName" name="lastName" required maxLength={80} className="min-h-11" />
+                  <PersianNameInput
+                    id="lastName"
+                    name="lastName"
+                    required
+                    value={lastName}
+                    onValueChange={setLastName}
+                  />
                 </Field>
               </div>
               <div className="grid gap-4 md:grid-cols-2">
                 <Field>
                   <FieldLabel htmlFor="nationalCode">کد ملی</FieldLabel>
-                  <DigitLimitedInput id="nationalCode" name="nationalCode" maxDigits={10} required placeholder="۰۰۱۲۳۴۵۶۷۸" />
+                  <DigitLimitedInput
+                    id="nationalCode"
+                    name="nationalCode"
+                    maxDigits={10}
+                    required
+                    placeholder="۰۰۱۲۳۴۵۶۷۸"
+                    value={nationalCode}
+                    onValueChange={setNationalCode}
+                  />
                   <FieldDescription>۱۰ رقم</FieldDescription>
                 </Field>
                 <Field>
@@ -232,16 +320,40 @@ export function PolicyForm({ type }: { type: "New" | "Used" }) {
               </div>
               <Field>
                 <FieldLabel htmlFor="mobile">شماره موبایل</FieldLabel>
-                <DigitLimitedInput id="mobile" name="mobile" maxDigits={11} required placeholder="09121234567" />
+                <DigitLimitedInput
+                  id="mobile"
+                  name="mobile"
+                  maxDigits={11}
+                  required
+                  exactLength={false}
+                  placeholder="09121234567"
+                  value={mobile}
+                  onValueChange={setMobile}
+                />
                 <FieldDescription>۱۱ رقم — مثل ۰۹۱۲۱۲۳۴۵۶۷</FieldDescription>
               </Field>
               <Field>
                 <FieldLabel htmlFor="address">آدرس</FieldLabel>
-                <Input id="address" name="address" required maxLength={500} className="min-h-11" />
+                <Input
+                  id="address"
+                  name="address"
+                  required
+                  maxLength={500}
+                  className="min-h-11"
+                  value={address}
+                  onChange={(e) => setAddress(e.target.value)}
+                />
               </Field>
               <Field>
                 <FieldLabel htmlFor="postalCode">کد پستی</FieldLabel>
-                <DigitLimitedInput id="postalCode" name="postalCode" maxDigits={10} required />
+                <DigitLimitedInput
+                  id="postalCode"
+                  name="postalCode"
+                  maxDigits={10}
+                  required
+                  value={postalCode}
+                  onValueChange={setPostalCode}
+                />
                 <FieldDescription>۱۰ رقم</FieldDescription>
               </Field>
 
@@ -385,7 +497,7 @@ export function PolicyForm({ type }: { type: "New" | "Used" }) {
                   {imeiAvailability.data?.message ?? "این IMEI دارای بیمه‌نامه فعال است."}
                 </p>
               ) : null}
-              {type === "New" ? (
+              {resolvedType === "New" ? (
                 <Field>
                   <FieldLabel htmlFor="startDate">تاریخ شروع بیمه‌نامه</FieldLabel>
                   <JalaliDatePicker
@@ -414,8 +526,18 @@ export function PolicyForm({ type }: { type: "New" | "Used" }) {
                 }
               >
                 {pending ? <Spinner data-icon="inline-start" /> : null}
-                مرحله بعد
+                {isEdit ? "ذخیره تغییرات" : "مرحله بعد"}
               </Button>
+              {isEdit && policyId ? (
+                <Button
+                  type="button"
+                  variant="outline"
+                  className="min-h-11 w-full"
+                  onClick={() => router.push(`/insurance/${policyId}/images`)}
+                >
+                  بازگشت به تصاویر
+                </Button>
+              ) : null}
             </FieldGroup>
           </form>
         </CardContent>

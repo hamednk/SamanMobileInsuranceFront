@@ -175,7 +175,7 @@ export function PolicyFiltersForm({
           onChange={(status) => patch({ status })}
           options={[
             { value: "Issued", label: "صادر شده" },
-            { value: "Paid", label: "ثبت‌شده" },
+            { value: "Paid", label: "در انتظار صدور" },
             { value: "AwaitingPayment", label: "در انتظار پرداخت" },
             { value: "Expired", label: "منقضی‌شده" },
             { value: "Cancelled", label: "لغو شده" },

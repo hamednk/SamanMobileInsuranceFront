@@ -2,6 +2,7 @@
 
 import { Suspense, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
+import { useQueryClient } from "@tanstack/react-query";
 import { BrandLogo } from "@/components/brand-logo";
 import { PublicAuthChrome } from "@/components/theme-toggle";
 import { Button } from "@/components/ui/button";
@@ -18,6 +19,7 @@ type PaymentComplete = {
 function MockGatewayInner() {
   const search = useSearchParams();
   const router = useRouter();
+  const client = useQueryClient();
   const authority = search.get("authority") ?? "";
   const policyId = search.get("policyId") ?? "";
   const [pending, setPending] = useState<"ok" | "fail" | null>(null);
@@ -34,8 +36,13 @@ function MockGatewayInner() {
         authority,
         status: "OK",
       });
-      const next = result.nextPath || (result.policyId ? `/insurance/${result.policyId}/success` : null);
-      router.replace(next || (policyId ? `/insurance/${policyId}/success` : "/policies"));
+      const resolvedPolicyId = result.policyId || policyId;
+      if (resolvedPolicyId) {
+        await client.invalidateQueries({ queryKey: ["policy", resolvedPolicyId] });
+        await client.invalidateQueries({ queryKey: ["policies"] });
+      }
+      const next = result.nextPath || (resolvedPolicyId ? `/insurance/${resolvedPolicyId}/success` : null);
+      router.replace(next || "/policies");
     } catch (error) {
       notifyError(error);
       setPending(null);

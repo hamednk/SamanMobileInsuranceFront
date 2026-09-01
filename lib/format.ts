@@ -42,6 +42,11 @@ export function limitDigitInput(raw: string, maxDigits: number): string {
   return toFaDigits(toEnDigits(raw).replace(/\D/g, "").slice(0, maxDigits));
 }
 
+/** Strip Latin letters and digits from Persian name fields. */
+export function limitPersianNameInput(raw: string, maxLength = 80): string {
+  return raw.replace(/[\d_a-zA-Z]/g, "").slice(0, maxLength);
+}
+
 export function formatRial(rial: number): string {
   return `${formatNumber(Math.round(rial))} ریال`;
 }
@@ -136,9 +141,9 @@ export function typeLabel(value: string | null | undefined): string {
   return TYPE_LABELS[value] ?? TYPE_LABELS[value.trim()] ?? value;
 }
 
-/** Policy workflow status (Paid = registered, awaiting company issuance). */
+/** Policy workflow status (Paid = paid, awaiting company issuance). */
 export function policyStatusLabel(status: string): string {
-  if (status === "Paid") return "ثبت‌شده";
+  if (status === "Paid") return "در انتظار صدور";
   return typeLabel(status);
 }
 

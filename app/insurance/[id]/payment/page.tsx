@@ -2,7 +2,7 @@
 
 import { useQuery } from "@tanstack/react-query";
 import { useParams, useRouter, useSearchParams } from "next/navigation";
-import { Suspense, useState } from "react";
+import { Suspense, useEffect, useState } from "react";
 import { StoreShell } from "@/components/store-shell";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -20,6 +20,10 @@ export default function PaymentPage() {
   );
 }
 
+function isPolicyPaid(status: string) {
+  return status === "Paid" || status === "Issued";
+}
+
 function PaymentInner() {
   const params = useParams<{ id: string }>();
   const search = useSearchParams();
@@ -27,17 +31,31 @@ function PaymentInner() {
   const [pending, setPending] = useState(false);
   const failed = search.get("failed") === "1";
 
-  const { data } = useQuery({
+  const { data, refetch, isLoading } = useQuery({
     queryKey: ["policy", params.id],
     queryFn: () => api.get<Policy>(`/api/v1/insurance/${params.id}`),
   });
 
+  useEffect(() => {
+    if (data && isPolicyPaid(data.status)) {
+      router.replace(`/insurance/${params.id}/success`);
+    }
+  }, [data, params.id, router]);
+
   const premium = data?.premiumRial ?? 0;
   const profit = data ? data.storeProfitRial : 0;
+  const alreadyPaid = data ? isPolicyPaid(data.status) : false;
 
   async function pay() {
     setPending(true);
     try {
+      const latest = await refetch();
+      const policy = latest.data;
+      if (policy && isPolicyPaid(policy.status)) {
+        router.replace(`/insurance/${params.id}/success`);
+        return;
+      }
+
       const init = await api.post<PaymentInit>(`/api/v1/insurance/${params.id}/payment/init`);
       const url = new URL(init.redirectUrl, window.location.origin);
       url.searchParams.set("policyId", params.id);
@@ -69,9 +87,12 @@ function PaymentInner() {
               سود فروشگاه فقط نمایش داده می‌شود و در درگاه پرداخت نمی‌شود. مبلغ پرداخت فقط حق بیمه است.
             </p>
             <Row label="مبلغ قابل پرداخت" value={data ? formatToman(premium) : ""} />
-            <Button className="mt-4 min-h-11" onClick={pay} disabled={pending || !data}>
+            <Button className="mt-4 min-h-11" onClick={pay} disabled={pending || !data || isLoading || alreadyPaid}>
               {pending ? <Spinner data-icon="inline-start" /> : null}
               پرداخت حق بیمه
+            </Button>
+            <Button variant="outline" onClick={() => router.push(`/insurance/${params.id}/edit`)}>
+              بازگشت و ویرایش اطلاعات
             </Button>
             <Button variant="outline" onClick={() => router.push(`/insurance/${params.id}/images`)}>
               بازگشت به تصاویر
